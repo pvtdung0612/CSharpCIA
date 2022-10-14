@@ -3,29 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CSharpCIA.src.node.builder;
+using CSharpCIA.CSharpCIA.Nodes.Builders;
 
-namespace CSharpCIA.src.node
+namespace CSharpCIA.CSharpCIA.Nodes
 {
     public abstract class Node
     {
         private uint id;
         private string name;
-        private string sourceFile;
+        private string sourcePath;
         private List<Connection> connections;
 
+        public abstract Type Type { get; }
         public uint Id { get => id; set => id = value; }
         public string Name { get => name; set => name = value; }
-        public string SourceFile { get => sourceFile; init => sourceFile = value; }
-        public List<Connection> Connections { get => connections; set => connections = value; }
+        public string SourcePath { get => sourcePath; set => sourcePath = value; }
 
-        public abstract Type Type { get; }
-
-        protected Node(uint id, string name, string sourceFile, List<Connection> connections)
+        protected Node(uint id, string name, string sourcePath, List<Connection> connections)
         {
             Id = id;
             Name = name;
-            SourceFile = sourceFile;
+            SourcePath = sourcePath;
             this.connections = connections;
         }
     }

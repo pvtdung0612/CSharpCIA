@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CSharpCIA.src.node.builder
+namespace CSharpCIA.CSharpCIA.Nodes.Builders
 {
     public enum MODIFIERS
     {

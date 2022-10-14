@@ -1,4 +1,4 @@
-namespace CSharpCIA.src.node.builder
+namespace CSharpCIA.CSharpCIA.Nodes.Builders
 {
     public enum CONNECTIONS
     {
