@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CSharpCIA.CSharpCIA.Helpers
+namespace CSharpCIA.Test.Helpers
 {
     public class FileHelper
     {

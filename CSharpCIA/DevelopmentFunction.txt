@@ -1,0 +1,20 @@
+﻿> Development deep property, field nodes
+	- Developed:
+		RootNode
+		Namespace (lack Usings)
+	- Undeveloped:
+		ClassNode
+		FieldNode
+		PropertyNode
+		MethodNode
+> Add more Node in list member of a namespace
+	- Lack
+		EnumNode
+		StructNode
+		DelegateNode
+> Setup Modifiers
+> Setup Connection
+> Setup Binding Node together
+> Create API Compare two version
+> Make CS Tree
+> Create API Export Json file

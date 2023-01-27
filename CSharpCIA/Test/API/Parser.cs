@@ -13,11 +13,10 @@ using CSharpCIA.CSharpCIA.Nodes.Builders;
 using System.Data;
 using System.Xml.Linq;
 
-namespace CSharpCIA.DataTest
+namespace CSharpCIA.Test.API
 {
     public class Parser
     {
-        public Parser() { }
         public RootNode ParserFile(string filePath)
         {
             RootNode root = null;
