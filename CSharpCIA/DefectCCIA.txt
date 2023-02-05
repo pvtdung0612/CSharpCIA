@@ -1,0 +1,9 @@
+Nhược điểm:
+- chưa tách và phân biệt rõ ràng các đối tượng trong cấu trúc mã nguồn các node như namespace, class, method, property, ...
+- chị yến code thêm phần phân tích .dll: phần này thừa cho việc phân tích ảnh hưởng thay đổi mã nguồn
+- code dài, và chưa chuyên nghiệp trong tách phần xử lý file cho Helper ở MyParser.cs
+
+- chưa module hóa phần phân tích Node và phân tích kết nốt các Node
+
+Note Đã bỏ qua:
+- dùng Attribute JsonIgnore

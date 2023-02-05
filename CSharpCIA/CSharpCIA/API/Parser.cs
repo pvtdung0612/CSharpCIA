@@ -12,35 +12,45 @@ using Microsoft.VisualBasic;
 using CSharpCIA.CSharpCIA.Nodes.Builders;
 using System.Data;
 using System.Xml.Linq;
+using CSharpCIA.CSharpCIA.Helpers;
+using CSharpCIA.CSharpCIA.Nodes.Builders;
+using System.IO;
 
 namespace CSharpCIA.CSharpCIA.API
 {
     public class Parser
     {
-        public RootNode ParserFile(string filePath)
+        /// <summary>
+        /// This parse Node of Root
+        /// </summary>
+        /// <param name="path">Path is Directory Path or File Path of Root</param>
+        /// <returns>Root</returns>
+        public RootNode ParseNode(string path)
         {
-            RootNode root = null;
             uint countId = 0;
-            if (File.Exists(filePath))
+            RootNode root = new RootNode(countId, "Root", "Root", path, path, null, null);
+
+            foreach (var filePath in FileHelper.GetSourceFiles(path))
             {
-                // Read File
-                string fileContent = File.ReadAllText(filePath);
-
-                // Init Root
-                root = new RootNode(countId, Path.GetFileName(filePath), filePath, fileContent, new List<Node>(), new List<Connection>());
-                SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(fileContent);
-                CompilationUnitSyntax compilationUnitSyntax = syntaxTree.GetCompilationUnitRoot();
-
-                // Get Childrens
-                foreach (var item in compilationUnitSyntax.Members)
+                Console.WriteLine("Parse File Name: " + filePath);
+                if (File.Exists(filePath))
                 {
-                    root.childrens.AddRange(ParserNode(ref countId, item, filePath));
+                    // Parser File
+                    string fileContent = File.ReadAllText(filePath);
+                    SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(fileContent);
+                    root.trees.Add(syntaxTree);
+                    CompilationUnitSyntax compilationUnitSyntax = syntaxTree.GetCompilationUnitRoot();
+
+                    // Get Childrens
+                    foreach (var item in compilationUnitSyntax.Members)
+                    {
+                        root.childrens.AddRange(ParseNode(ref countId, item, filePath, filePath));
+                    }
                 }
             }
             return root;
         }
-
-        public List<Node> ParserNode(ref uint countId, SyntaxNode child, string sourcePath)
+        private List<Node> ParseNode(ref uint countId, SyntaxNode child, string sourcePath, string parentPath)
         {
             List<Node> transferNodes = null;
 
@@ -51,22 +61,30 @@ namespace CSharpCIA.CSharpCIA.API
                 {
                     countId++;
                     NamespaceDeclarationSyntax namespaceDeclarationSyntax = (NamespaceDeclarationSyntax)child;
-                    NamespaceNode namespaceNode = new NamespaceNode(countId, namespaceDeclarationSyntax.Name.ToString(), sourcePath, null);
+
+                    // Config new transfer Node
+                    string originName = parentPath + Path.DirectorySeparatorChar + namespaceDeclarationSyntax.Name.ToString().Replace('.', Path.DirectorySeparatorChar);
+
+                    NamespaceNode namespaceNode = new NamespaceNode(countId, namespaceDeclarationSyntax.Name.ToString(), namespaceDeclarationSyntax.Name.ToString(), originName, sourcePath, child.SyntaxTree, child);
                     transferNodes.Add(namespaceNode);
                     foreach (var item in namespaceDeclarationSyntax.Members)
                     {
-                        transferNodes.AddRange(ParserNode(ref countId, item, sourcePath));
+                        transferNodes.AddRange(ParseNode(ref countId, item, sourcePath, originName));
                     }
                 }
                 else if (child is ClassDeclarationSyntax)
                 {
                     countId++;
                     ClassDeclarationSyntax classDeclaration = (ClassDeclarationSyntax)child;
-                    ClassNode classNode = new ClassNode(countId, classDeclaration.Identifier.ToString(), sourcePath, null);
+
+                    // Config new transfer Node
+                    string originName = parentPath + Path.DirectorySeparatorChar + classDeclaration.Identifier.ToString();
+
+                    ClassNode classNode = new ClassNode(countId, classDeclaration.Identifier.ToString(), classDeclaration.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child);
                     transferNodes.Add(classNode);
                     foreach (var item in classDeclaration.Members)
                     {
-                        transferNodes.AddRange(ParserNode(ref countId, item, sourcePath));
+                        transferNodes.AddRange(ParseNode(ref countId, item, sourcePath, originName));
                     }
                 }
                 else if (child is FieldDeclarationSyntax)
@@ -74,8 +92,11 @@ namespace CSharpCIA.CSharpCIA.API
                     FieldDeclarationSyntax fieldDeclarationSyntax = (FieldDeclarationSyntax)child;
                     foreach (var variable in fieldDeclarationSyntax.Declaration.Variables)
                     {
+                        // Config new transfer Node
+                        string originName = parentPath + Path.DirectorySeparatorChar + variable.Identifier.ToString();
+
                         countId++;
-                        FieldNode fieldNode = new FieldNode(countId, variable.Identifier.ToString(), sourcePath, null);
+                        FieldNode fieldNode = new FieldNode(countId, variable.Identifier.ToString(), variable.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child);
                         transferNodes.Add(fieldNode);
                     }
                 }
@@ -83,7 +104,11 @@ namespace CSharpCIA.CSharpCIA.API
                 {
                     countId++;
                     PropertyDeclarationSyntax propertyDeclarationSyntax = (PropertyDeclarationSyntax)child;
-                    PropertyNode propertyNode = new PropertyNode(countId, propertyDeclarationSyntax.Identifier.ToString(), sourcePath, null);
+
+                    // Config new transfer Node
+                    string originName = parentPath + Path.DirectorySeparatorChar + propertyDeclarationSyntax.Identifier.ToString();
+
+                    PropertyNode propertyNode = new PropertyNode(countId, propertyDeclarationSyntax.Identifier.ToString(), propertyDeclarationSyntax.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child);
                     transferNodes.Add(propertyNode);
                 }
                 else if (child is MethodDeclarationSyntax)
@@ -91,23 +116,140 @@ namespace CSharpCIA.CSharpCIA.API
                     countId++;
                     MethodDeclarationSyntax methodDeclarationSyntax = (MethodDeclarationSyntax)child;
 
-                    // Make uniqueName for MethodNode
+
+                    // Config new transfer Node
+                    // Make qualifiedName for MethodNode
                     Boolean check = false;
-                    string uniqueName = methodDeclarationSyntax.Identifier.ToString() + "(";
+                    string simpleName = methodDeclarationSyntax.Identifier.ToString();
+                    string qualifiedName = simpleName + "(";
                     foreach (var param in methodDeclarationSyntax.ParameterList.Parameters)
                     {
-                        uniqueName += param.Type + ", ";
+                        qualifiedName += param.Type + ", ";
                         check = true;
                     }
-                    if (check) uniqueName = uniqueName.Remove(uniqueName.Length - 2);
-                    uniqueName += ")";
+                    if (check) qualifiedName = qualifiedName.Remove(qualifiedName.Length - 2);
+                    qualifiedName += ")";
+                    string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
 
-                    MethodNode methodNode = new MethodNode(countId, methodDeclarationSyntax.Identifier.ToString(), sourcePath, null, uniqueName, methodDeclarationSyntax.Body.ToString());
+                    MethodNode methodNode = new MethodNode(countId, methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, methodDeclarationSyntax.Body.ToString());
                     transferNodes.Add(methodNode);
                 }
+                //else if (child is GlobalStatementSyntax)
+                //{
+                //    countId++;
+                //    MethodDeclarationSyntax methodDeclarationSyntax = (MethodDeclarationSyntax)child;
+
+
+                //     Config new transfer Node
+                //     Make qualifiedName for MethodNode
+                //    Boolean check = false;
+                //    string simpleName = methodDeclarationSyntax.Identifier.ToString();
+                //    string qualifiedName = simpleName + "(";
+                //    foreach (var param in methodDeclarationSyntax.ParameterList.Parameters)
+                //    {
+                //        qualifiedName += param.Type + ", ";
+                //        check = true;
+                //    }
+                //    if (check) qualifiedName = qualifiedName.Remove(qualifiedName.Length - 2);
+                //    qualifiedName += ")";
+                //    string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
+
+                //    MethodNode methodNode = new MethodNode(countId, methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, methodDeclarationSyntax.Body.ToString());
+                //    transferNodes.Add(methodNode);
+                //}
             }
 
             return transferNodes;
+        }
+
+        public Tuple<List<Dependency>, RootNode> Parse(string path)
+        {
+            List<Dependency> dependencies = null;
+            RootNode root = ParseNode(path);
+
+            if (root is not null)
+            {
+                var compilation = CSharpCompilation.Create("compiler")
+                    .AddReferences(MetadataReference.CreateFromFile(typeof(string).Assembly.Location));
+
+                var libs = FileHelper.GetAllDllFile(path);
+                foreach (var l in libs)
+                {
+                    Console.WriteLine($"DLL: {l.ToString()}");
+                    compilation = compilation.AddReferences(MetadataReference.CreateFromFile(l));
+                }
+
+                foreach (var tree in root.trees)
+                    compilation = compilation.AddSyntaxTrees(tree);
+
+                dependencies = ParseDependency(root, compilation);
+            }
+
+            Tuple<List<Dependency>, RootNode> tuple = Tuple.Create(dependencies, root);
+            return tuple;
+        }
+
+        /// <summary>
+        /// This parse Dependency between two Node in Childrens of Root
+        /// </summary>
+        /// <param name="path">Path is Directory Path or File Path of Root</param>
+        /// <returns>List Dependency of root</returns>
+        public List<Dependency> ParseDependency(RootNode root, CSharpCompilation compilation)
+        {
+            List<Dependency> dependencies = new List<Dependency>();
+
+            if (compilation is not null)
+            {
+                // Parse Method 
+                foreach (Node child in root.childrens.FindAll(n => n.Type is NODE_TYPE.METHOD))
+                {
+                    MethodNode methodNode = (MethodNode)child;
+                    ParseMethodDependency(methodNode, compilation, root, dependencies);
+                }
+            }
+
+            return dependencies;
+        }
+
+        private void ParseMethodDependency(MethodNode methodNode, CSharpCompilation compilation, RootNode root, List<Dependency> dependencies)
+        {
+            MethodDeclarationSyntax methodSyntax = (MethodDeclarationSyntax)methodNode.SyntaxNode;
+            SemanticModel model = compilation.GetSemanticModel(methodNode.SyntaxTree);
+
+            if (methodSyntax is not null && methodSyntax.Body is not null && model is not null)
+            {
+                var nameSyntax = methodSyntax.Body.DescendantNodes().OfType<IdentifierNameSyntax>();
+
+                foreach (var statement in nameSyntax)
+                {
+                    var symbol = model.GetSymbolInfo(statement).Symbol;
+                    if (symbol is not null)
+                    {
+                        var callees = root.childrens.FindAll(node =>
+                                   node.OriginName.EndsWith(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                        foreach (var callee in callees)
+                        {
+                            if (callee.Type.Equals(NODE_TYPE.METHOD))
+                            {
+                                Dependency d = new Dependency();
+                                d.Type = DEPENDENCY_TYPE.INVOKE;
+                                d.Caller = methodNode.OriginName;
+                                d.Callee = callee.OriginName;
+                                dependencies.Add(d);
+                            }
+                            else if (callee.Type.Equals(NODE_TYPE.FIELD) || callee.Type.Equals(NODE_TYPE.PROPERTY))
+                            {
+                                Dependency d = new Dependency();
+                                d.Type = DEPENDENCY_TYPE.USE;
+                                d.Caller = methodNode.OriginName;
+                                d.Callee = callee.OriginName;
+                                dependencies.Add(d);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

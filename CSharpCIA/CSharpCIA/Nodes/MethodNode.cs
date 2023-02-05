@@ -1,4 +1,5 @@
 ﻿using CSharpCIA.CSharpCIA.Nodes.Builders;
+using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,20 +10,12 @@ namespace CSharpCIA.CSharpCIA.Nodes
 {
     public class MethodNode : Node
     {
-        private List<MODIFIERS> modifiers;
         private string body;
-        private string uniqueName;
-
         public string Body { get => body; set => body = value; }
-
-        public override Type Type => typeof(MethodNode);
-
-        public string UniqueName { get => uniqueName; set => uniqueName = value; }
-
-        public MethodNode(uint id, string name, string sourcePath, List<Connection> connections, string uniqueName, string body) : base(id, name, sourcePath, connections)
+        public override NODE_TYPE Type => NODE_TYPE.METHOD;
+        public MethodNode(uint id, string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode, string body) : base(id, simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
         {
-            UniqueName = uniqueName;
-            Body = body;
+            this.body = body;
         }
     }
 }

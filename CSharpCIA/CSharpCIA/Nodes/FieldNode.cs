@@ -1,4 +1,5 @@
 ﻿using CSharpCIA.CSharpCIA.Nodes.Builders;
+using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +10,10 @@ namespace CSharpCIA.CSharpCIA.Nodes
 {
     public class FieldNode : Node
     {
-        public List<MODIFIERS> modifiers;
 
-        public override Type Type => typeof(FieldNode);
+        public override NODE_TYPE Type => NODE_TYPE.FIELD;
 
-        public FieldNode(uint id, string name, string sourcePath, List<Connection> connections) : base(id, name, sourcePath, connections)
+        public FieldNode(uint id, string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode) : base(id, simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
         {
         }
     }

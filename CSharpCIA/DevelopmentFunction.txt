@@ -18,3 +18,6 @@
 > Create API Compare two version
 > Make CS Tree
 > Create API Export Json file
+
+> Add test case:
+	- test case 1 hàm gọi 2 hàm cùng tên overloading

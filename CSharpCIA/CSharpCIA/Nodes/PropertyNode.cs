@@ -1,4 +1,5 @@
 ﻿using CSharpCIA.CSharpCIA.Nodes.Builders;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
@@ -12,13 +13,14 @@ namespace CSharpCIA.CSharpCIA.Nodes
     {
         private List<Accessor> accessors;
 
-        public PropertyNode(uint id, string name, string sourcePath, List<Connection> connections) : base(id, name, sourcePath, connections)
+        public PropertyNode(uint id, string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode) : base(id, simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
         {
         }
 
-        public override Type Type => typeof(PropertyNode);
+        public override NODE_TYPE Type => NODE_TYPE.PROPERTY;
     }
 
+    // 3864 bỏ
     public class Accessor
     {
         public enum ACCESSOR
