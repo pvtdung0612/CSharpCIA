@@ -226,7 +226,7 @@ namespace CSharpCIA.CSharpCIA.API
                     if (symbol is not null)
                     {
                         var callees = root.childrens.FindAll(node =>
-                                   node.OriginName.EndsWith(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
+                                   node.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
                         foreach (var callee in callees)
                         {
