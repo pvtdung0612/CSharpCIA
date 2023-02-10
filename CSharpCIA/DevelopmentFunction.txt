@@ -21,3 +21,6 @@
 
 > Add test case:
 	- test case 1 hàm gọi 2 hàm cùng tên overloading
+	# Xử lý được
+
+> Parse Constructor với quan hệ INVOKE

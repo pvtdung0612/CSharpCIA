@@ -10,12 +10,12 @@ namespace CSharpCIA.CSharpCIA.Nodes
 {
     public class MethodNode : Node
     {
-        private string body;
-        public string Body { get => body; set => body = value; }
+        private string? body;
+        public string? Body { get => body; set => body = value; }
         public override NODE_TYPE Type => NODE_TYPE.METHOD;
         public MethodNode(uint id, string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode, string body) : base(id, simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
         {
-            this.body = body;
+            this.Body = body;
         }
     }
 }

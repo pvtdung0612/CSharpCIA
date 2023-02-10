@@ -11,13 +11,15 @@ namespace CSharpCIA.CSharpCIA.Nodes.Builders
         INVOKE,
         USE,
         //MEMBER,
-        //INHERIT,
-        //OVERRIDE,
+        INHERIT,
+        IMPLEMENT,
+        OVERRIDE,
     }
     public enum NODE_TYPE
     {
         ROOT,
         NAMESPACE,
+        INTERFACE,
         CLASS,
         FIELD,
         PROPERTY,

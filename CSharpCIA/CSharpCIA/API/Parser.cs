@@ -21,7 +21,39 @@ namespace CSharpCIA.CSharpCIA.API
     public class Parser
     {
         /// <summary>
-        /// This parse Node of Root
+        /// Parse node and dependency at root
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public Tuple<List<Dependency>, RootNode> Parse(string path)
+        {
+            List<Dependency> dependencies = null;
+            RootNode root = ParseNode(path);
+
+            if (root is not null)
+            {
+                var compilation = CSharpCompilation.Create("compiler")
+                    .AddReferences(MetadataReference.CreateFromFile(typeof(string).Assembly.Location));
+
+                var libs = FileHelper.GetAllDllFile(path);
+                foreach (var l in libs)
+                {
+                    Console.WriteLine($"DLL: {l.ToString()}");
+                    compilation = compilation.AddReferences(MetadataReference.CreateFromFile(l));
+                }
+
+                foreach (var tree in root.trees)
+                    compilation = compilation.AddSyntaxTrees(tree);
+
+                dependencies = ParseDependency(root, compilation);
+            }
+
+            Tuple<List<Dependency>, RootNode> tuple = Tuple.Create(dependencies, root);
+            return tuple;
+        }
+
+        /// <summary>
+        /// Parse node at root
         /// </summary>
         /// <param name="path">Path is Directory Path or File Path of Root</param>
         /// <returns>Root</returns>
@@ -50,6 +82,15 @@ namespace CSharpCIA.CSharpCIA.API
             }
             return root;
         }
+
+        /// <summary>
+        /// Parse node at root
+        /// </summary>
+        /// <param name="countId"></param>
+        /// <param name="child"></param>
+        /// <param name="sourcePath"></param>
+        /// <param name="parentPath"></param>
+        /// <returns></returns>
         private List<Node> ParseNode(ref uint countId, SyntaxNode child, string sourcePath, string parentPath)
         {
             List<Node> transferNodes = null;
@@ -131,7 +172,8 @@ namespace CSharpCIA.CSharpCIA.API
                     qualifiedName += ")";
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
 
-                    MethodNode methodNode = new MethodNode(countId, methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, methodDeclarationSyntax.Body.ToString());
+                    string body = methodDeclarationSyntax.Body is null ? null : methodDeclarationSyntax.Body.ToString();
+                    MethodNode methodNode = new MethodNode(countId, methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, body);
                     transferNodes.Add(methodNode);
                 }
                 //else if (child is GlobalStatementSyntax)
@@ -162,38 +204,12 @@ namespace CSharpCIA.CSharpCIA.API
             return transferNodes;
         }
 
-        public Tuple<List<Dependency>, RootNode> Parse(string path)
-        {
-            List<Dependency> dependencies = null;
-            RootNode root = ParseNode(path);
-
-            if (root is not null)
-            {
-                var compilation = CSharpCompilation.Create("compiler")
-                    .AddReferences(MetadataReference.CreateFromFile(typeof(string).Assembly.Location));
-
-                var libs = FileHelper.GetAllDllFile(path);
-                foreach (var l in libs)
-                {
-                    Console.WriteLine($"DLL: {l.ToString()}");
-                    compilation = compilation.AddReferences(MetadataReference.CreateFromFile(l));
-                }
-
-                foreach (var tree in root.trees)
-                    compilation = compilation.AddSyntaxTrees(tree);
-
-                dependencies = ParseDependency(root, compilation);
-            }
-
-            Tuple<List<Dependency>, RootNode> tuple = Tuple.Create(dependencies, root);
-            return tuple;
-        }
-
         /// <summary>
-        /// This parse Dependency between two Node in Childrens of Root
+        /// Parse dependency at root
         /// </summary>
-        /// <param name="path">Path is Directory Path or File Path of Root</param>
-        /// <returns>List Dependency of root</returns>
+        /// <param name="root"></param>
+        /// <param name="compilation"></param>
+        /// <returns></returns>
         public List<Dependency> ParseDependency(RootNode root, CSharpCompilation compilation)
         {
             List<Dependency> dependencies = new List<Dependency>();
@@ -204,15 +220,32 @@ namespace CSharpCIA.CSharpCIA.API
                 foreach (Node child in root.childrens.FindAll(n => n.Type is NODE_TYPE.METHOD))
                 {
                     MethodNode methodNode = (MethodNode)child;
-                    ParseMethodDependency(methodNode, compilation, root, dependencies);
+                    dependencies.AddRange(ParseMethodDependency(methodNode, compilation, root));
+                }
+
+                // Parse Class
+                foreach (Node child in root.childrens.FindAll(n => n.Type is NODE_TYPE.CLASS))
+                {
+                    ClassNode classNode = (ClassNode)child;
+                    dependencies.AddRange(ParseClassDependency(classNode, compilation, root));
+
+
                 }
             }
 
             return dependencies;
         }
 
-        private void ParseMethodDependency(MethodNode methodNode, CSharpCompilation compilation, RootNode root, List<Dependency> dependencies)
+        /// <summary>
+        /// Parse dependency of method
+        /// </summary>
+        /// <param name="methodNode"></param>
+        /// <param name="compilation"></param>
+        /// <param name="root"></param>
+        /// <returns></returns>
+        private List<Dependency> ParseMethodDependency(MethodNode methodNode, CSharpCompilation compilation, RootNode root)
         {
+            List<Dependency> dependencies = new List<Dependency>();
             MethodDeclarationSyntax methodSyntax = (MethodDeclarationSyntax)methodNode.SyntaxNode;
             SemanticModel model = compilation.GetSemanticModel(methodNode.SyntaxTree);
 
@@ -250,6 +283,156 @@ namespace CSharpCIA.CSharpCIA.API
                     }
                 }
             }
+
+            return dependencies;
+        }
+
+        private List<Dependency> ParseClassDependency(ClassNode classNode, CSharpCompilation compilation, RootNode root)
+        {
+            List<Dependency> dependencies = new List<Dependency>();
+            SemanticModel model = compilation.GetSemanticModel(classNode.SyntaxTree);
+
+            if (classNode is not null)
+            {
+                var namedTypeSymbol = model.GetDeclaredSymbol(classNode.SyntaxNode);
+                var symbol = namedTypeSymbol is null ? null : (INamedTypeSymbol)namedTypeSymbol;
+                if (symbol is not null)
+                {
+                    // INHERIT
+                    if (symbol.BaseType is not null)
+                    {
+                        List<Node> baseClasses = root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.CLASS)
+                        && node.BindingName.Equals(symbol.BaseType.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                        foreach (var baseClass in baseClasses)
+                        {
+                            Dependency dependency = new Dependency();
+                            dependency.Type = DEPENDENCY_TYPE.INHERIT;
+                            dependency.Caller = classNode.OriginName;
+                            dependency.Callee = baseClass.OriginName;
+                            dependencies.Add(dependency);
+                        }
+                    }
+
+                    // IMPLEMENT
+                    var interfaceDirectes = symbol.Interfaces; // get list interface relative direct with classNode
+
+                    foreach (var interfaceDirect in interfaceDirectes)
+                    {
+                        var interfaceNodes = root.childrens.FindAll(node =>
+                           node.Equals(NODE_TYPE.INTERFACE)
+                           && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                        foreach (var interfaceNode in interfaceNodes)
+                        {
+                            Dependency dependency = new Dependency();
+                            dependency.Type = DEPENDENCY_TYPE.IMPLEMENT;
+                            dependency.Caller = classNode.OriginName;
+                            dependency.Callee = interfaceNode.OriginName;
+                            dependencies.Add(dependency);
+                        }
+                    }
+
+                    // OVERRIDE
+                    // Get method in classNode
+                    var methodOfClass = root.childrens.FindAll(node =>
+                    node.Type.Equals(NODE_TYPE.METHOD)
+                    && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
+                    .Equals(classNode.BindingName));
+
+                    var interfaceRelatives = symbol.AllInterfaces.ToList(); // get list interface relative with class
+                    var interfaceIndirectes = interfaceRelatives.FindAll(n => !interfaceDirectes.ToList().Contains(n)); // get list interface relative indirect with class
+                    List<Node> methodDirectNodes = new List<Node>();
+                    List<Node> methodIndirectNodes = new List<Node>();
+
+                    // Get method in interface direct
+                    foreach (var interfaceDirect in interfaceDirectes)
+                    {
+                        //  // 3864 debug
+                        //  interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar);
+                        //  var test1 = root.childrens.FindAll(node =>
+                        //node.Type.Equals(NODE_TYPE.INTERFACE));
+                        // test git
+
+                        var interfaceNodes = root.childrens.FindAll(node =>
+                      node.Type.Equals(NODE_TYPE.INTERFACE)
+                      && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                        foreach (var interfaceNode in interfaceNodes)
+                        {
+                            methodDirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD)
+                            && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
+                            .Equals(interfaceNode.BindingName)));
+                        }
+                    }
+                    // Get method in interface indirect
+                    foreach (var interfaceIndirect in interfaceIndirectes)
+                    {
+                        var interfaceNodes = root.childrens.FindAll(node =>
+                      node.Type.Equals(NODE_TYPE.INTERFACE)
+                      && node.BindingName.Equals(interfaceIndirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                        foreach (var interfaceNode in interfaceNodes)
+                        {
+                            methodIndirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD)
+                            && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
+                            .Equals(interfaceNode.BindingName)));
+                        }
+                    }
+
+                    foreach (var methodNode in methodOfClass)
+                    {
+                        // OVERRIDE: CLASS - CLASS
+                        var methodSymbol = model.GetDeclaredSymbol(methodNode.SyntaxNode);
+                        var iMethodSymbol = methodSymbol is null ? null : (IMethodSymbol)methodSymbol;
+
+                        if (iMethodSymbol != null && iMethodSymbol.IsOverride)
+                        {
+                            var superMethodNodes = root.childrens.FindAll(n => n.BindingName.Equals(iMethodSymbol.OverriddenMethod.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                            foreach (var superMethodNode in superMethodNodes)
+                            {
+                                Dependency dependency = new Dependency();
+                                dependency.Type = DEPENDENCY_TYPE.OVERRIDE;
+                                dependency.Caller = methodNode.OriginName;
+                                dependency.Callee = superMethodNode.OriginName;
+                                dependencies.Add(dependency);
+                            }
+                        }
+                        else
+                        {
+                            // OVERRIDE: CLASS - INTERFACE DIRECT
+                            var methodDirectOverrides = methodDirectNodes.FindAll(n => n.QualifiedName.Equals(methodNode.QualifiedName));
+                            if (methodDirectOverrides.Count > 0)
+                            {
+                                foreach (var item in methodDirectOverrides)
+                                {
+                                    Dependency dependency = new Dependency();
+                                    dependency.Type = DEPENDENCY_TYPE.OVERRIDE;
+                                    dependency.Caller = methodNode.OriginName;
+                                    dependency.Callee = item.OriginName;
+                                    dependencies.Add(dependency);
+                                }
+                            }
+                            // OVERRIDE: CLASS - INTERFACE INDIRECT
+                            else
+                            {
+                                var methodIndirectOverrides = methodIndirectNodes.FindAll(n => n.QualifiedName.Equals(methodNode.QualifiedName));
+                                foreach (var item in methodIndirectOverrides)
+                                {
+                                    Dependency dependency = new Dependency();
+                                    dependency.Type = DEPENDENCY_TYPE.OVERRIDE;
+                                    dependency.Caller = methodNode.OriginName;
+                                    dependency.Callee = item.OriginName;
+                                    dependencies.Add(dependency);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return dependencies;
         }
     }
 }
