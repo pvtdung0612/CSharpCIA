@@ -24,5 +24,8 @@ namespace CSharpCIA.CSharpCIA.Nodes.Builders
         FIELD,
         PROPERTY,
         METHOD,
+        STRUCT,
+        ENUM,
+        DELEGATE,
     }
 }

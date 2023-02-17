@@ -182,14 +182,10 @@ namespace CSharpCIA.CSharpCIA.API
                     countId++;
                     InterfaceDeclarationSyntax interfaceDeclarationSyntax = (InterfaceDeclarationSyntax)child;
 
-
                     // Config new transfer Node
-                    // Make qualifiedName for MethodNode
-                    Boolean check = false;
                     string simpleName = interfaceDeclarationSyntax.Identifier.ToString();
                     string qualifiedName = simpleName;
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
-
 
                     InterfaceNode interfaceNode = new InterfaceNode(countId, interfaceDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
                     transferNodes.Add(interfaceNode);
@@ -197,6 +193,45 @@ namespace CSharpCIA.CSharpCIA.API
                     {
                         transferNodes.AddRange(ParseNode(ref countId, item, sourcePath, originName));
                     }
+                }
+                else if (child is StructDeclarationSyntax)
+                {
+                    countId++;
+                    StructDeclarationSyntax structDeclarationSyntax = (StructDeclarationSyntax)child;
+
+                    // Config new transfer Node
+                    string simpleName = structDeclarationSyntax.Identifier.ToString();
+                    string qualifiedName = simpleName;
+                    string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
+
+                    StructNode structNode = new StructNode(countId, structDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
+                    transferNodes.Add(structNode);
+                }
+                else if (child is EnumDeclarationSyntax)
+                {
+                    countId++;
+                    EnumDeclarationSyntax enumDeclarationSyntax = (EnumDeclarationSyntax)child;
+
+                    // Config new transfer Node
+                    string simpleName = enumDeclarationSyntax.Identifier.ToString();
+                    string qualifiedName = simpleName;
+                    string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
+
+                    EnumNode enumNode = new EnumNode(countId, enumDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
+                    transferNodes.Add(enumNode);
+                }
+                else if (child is DelegateDeclarationSyntax)
+                {
+                    countId++;
+                    DelegateDeclarationSyntax delegateDeclarationSyntax = (DelegateDeclarationSyntax)child;
+
+                    // Config new transfer Node
+                    string simpleName = delegateDeclarationSyntax.Identifier.ToString();
+                    string qualifiedName = simpleName;
+                    string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
+
+                    DelegateNode delegateNode = new DelegateNode(countId, delegateDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
+                    transferNodes.Add(delegateNode);
                 }
                 // 3864 Improve
                 //else if (child is GlobalStatementSyntax)
@@ -314,7 +349,6 @@ namespace CSharpCIA.CSharpCIA.API
 
             return dependencies;
         }
-
         private List<Dependency> ParseClassDependency(ClassNode classNode, CSharpCompilation compilation, RootNode root)
         {
             List<Dependency> dependencies = new List<Dependency>();
