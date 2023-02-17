@@ -17,7 +17,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
         {
         }
 
-        public override NODE_TYPE Type => NODE_TYPE.PROPERTY;
+        public override string Type => NODE_TYPE.PROPERTY.ToString();
     }
 
     // 3864 bỏ

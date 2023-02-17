@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CSharpCIA.CSharpCIA.Nodes.Builders;
 using Microsoft.CodeAnalysis;
+using Newtonsoft.Json;
 
 namespace CSharpCIA.CSharpCIA.Nodes
 {
@@ -19,6 +20,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
         private string sourcePath; // Ex: Directory/Class
         private SyntaxTree syntaxTree; // For get tree of the file and find path binding
         private SyntaxNode syntaxNode; // For get
+        private List<Dependency> dependencies;
 
         protected Node(uint id, string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode)
         {
@@ -29,9 +31,10 @@ namespace CSharpCIA.CSharpCIA.Nodes
             this.SourcePath = sourcePath;
             this.SyntaxTree = syntaxTree;
             this.SyntaxNode = syntaxNode;
+            this.dependencies = new List<Dependency>();
         }
 
-        public abstract NODE_TYPE Type { get; }
+        public abstract string Type { get; }
         public uint Id { get => id; set => id = value; }
         public string SimpleName { get => simpleName; set => simpleName = value; }
         public string QualifiedName { get => qualifiedName; set => qualifiedName = value; }
@@ -78,7 +81,16 @@ namespace CSharpCIA.CSharpCIA.Nodes
             }
         }
         public string BindingName { get => bindingName; }
+
+        [JsonIgnore]
         public SyntaxTree SyntaxTree { get => syntaxTree; set => syntaxTree = value; }
+        [JsonIgnore]
         public SyntaxNode SyntaxNode { get => syntaxNode; set => syntaxNode = value; }
+        public List<Dependency> Dependencies { get => dependencies; set => dependencies = value; }
+    
+        public override string ToString()
+        {
+            return BindingName;
+        }
     }
 }

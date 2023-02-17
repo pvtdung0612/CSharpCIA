@@ -14,6 +14,6 @@ namespace CSharpCIA.CSharpCIA.Nodes
         {
         }
 
-        public override NODE_TYPE Type => NODE_TYPE.ENUM;
+        public override string Type => NODE_TYPE.ENUM.ToString();
     }
 }

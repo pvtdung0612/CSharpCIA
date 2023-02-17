@@ -272,28 +272,38 @@ namespace CSharpCIA.CSharpCIA.API
         {
             List<Dependency> dependencies = new List<Dependency>();
 
-            if (compilation is not null)
+            if (root is not null && compilation is not null)
             {
                 // Parse Method 
-                foreach (Node child in root.childrens.FindAll(n => n.Type is NODE_TYPE.METHOD))
+                foreach (Node child in root.childrens.FindAll(n => n.Type.Equals(NODE_TYPE.METHOD.ToString())))
                 {
                     MethodNode methodNode = (MethodNode)child;
                     dependencies.AddRange(ParseMethodDependency(methodNode, compilation, root));
                 }
 
                 // Parse Class
-                foreach (Node child in root.childrens.FindAll(n => n.Type is NODE_TYPE.CLASS))
+                foreach (Node child in root.childrens.FindAll(n => n.Type.Equals(NODE_TYPE.CLASS.ToString())))
                 {
                     ClassNode classNode = (ClassNode)child;
                     dependencies.AddRange(ParseClassDependency(classNode, compilation, root));
                 }
+
                 // Parse Interface
-                foreach (Node child in root.childrens.FindAll(n => n.Type is NODE_TYPE.INTERFACE))
+                foreach (Node child in root.childrens.FindAll(n => n.Type.Equals(NODE_TYPE.INTERFACE.ToString())))
                 {
                     InterfaceNode classNode = (InterfaceNode)child;
                     dependencies.AddRange(ParseInterfaceDependency(classNode, compilation, root));
                 }
-                
+
+                // Add dependencies into node in root
+                foreach (var dependency in dependencies)
+                {
+                    root.childrens.ForEach(n =>
+                    {
+                        if (n.OriginName.Equals(dependency.Caller))
+                            n.Dependencies.Add(dependency);
+                    });
+                }
             }
 
             return dependencies;
@@ -326,18 +336,18 @@ namespace CSharpCIA.CSharpCIA.API
 
                         foreach (var callee in callees)
                         {
-                            if (callee.Type.Equals(NODE_TYPE.METHOD))
+                            if (callee.Type.Equals(NODE_TYPE.METHOD.ToString()))
                             {
                                 Dependency d = new Dependency();
-                                d.Type = DEPENDENCY_TYPE.INVOKE;
+                                d.Type = DEPENDENCY_TYPE.INVOKE.ToString();
                                 d.Caller = methodNode.OriginName;
                                 d.Callee = callee.OriginName;
                                 dependencies.Add(d);
                             }
-                            else if (callee.Type.Equals(NODE_TYPE.FIELD) || callee.Type.Equals(NODE_TYPE.PROPERTY))
+                            else if (callee.Type.Equals(NODE_TYPE.FIELD.ToString()) || callee.Type.Equals(NODE_TYPE.PROPERTY.ToString()))
                             {
                                 Dependency d = new Dependency();
-                                d.Type = DEPENDENCY_TYPE.USE;
+                                d.Type = DEPENDENCY_TYPE.USE.ToString();
                                 d.Caller = methodNode.OriginName;
                                 d.Callee = callee.OriginName;
                                 dependencies.Add(d);
@@ -363,13 +373,13 @@ namespace CSharpCIA.CSharpCIA.API
                     // INHERIT
                     if (symbol.BaseType is not null)
                     {
-                        List<Node> baseClasses = root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.CLASS)
+                        List<Node> baseClasses = root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.CLASS.ToString())
                         && node.BindingName.Equals(symbol.BaseType.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
                         foreach (var baseClass in baseClasses)
                         {
                             Dependency dependency = new Dependency();
-                            dependency.Type = DEPENDENCY_TYPE.INHERIT;
+                            dependency.Type = DEPENDENCY_TYPE.INHERIT.ToString();
                             dependency.Caller = classNode.OriginName;
                             dependency.Callee = baseClass.OriginName;
                             dependencies.Add(dependency);
@@ -382,13 +392,13 @@ namespace CSharpCIA.CSharpCIA.API
                     foreach (var interfaceDirect in interfaceDirectes)
                     {
                         var interfaceNodes = root.childrens.FindAll(node =>
-                           node.Type.Equals(NODE_TYPE.INTERFACE)
+                           node.Type.Equals(NODE_TYPE.INTERFACE.ToString())
                            && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
                         foreach (var interfaceNode in interfaceNodes)
                         {
                             Dependency dependency = new Dependency();
-                            dependency.Type = DEPENDENCY_TYPE.IMPLEMENT;
+                            dependency.Type = DEPENDENCY_TYPE.IMPLEMENT.ToString();
                             dependency.Caller = classNode.OriginName;
                             dependency.Callee = interfaceNode.OriginName;
                             dependencies.Add(dependency);
@@ -398,7 +408,7 @@ namespace CSharpCIA.CSharpCIA.API
                     // OVERRIDE
                     // Get method in classNode
                     var methodOfClass = root.childrens.FindAll(node =>
-                    node.Type.Equals(NODE_TYPE.METHOD)
+                    node.Type.Equals(NODE_TYPE.METHOD.ToString())
                     && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
                     .Equals(classNode.BindingName));
 
@@ -413,37 +423,36 @@ namespace CSharpCIA.CSharpCIA.API
                         //  // 3864 debug
                         //  interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar);
                         //  var test1 = root.childrens.FindAll(node =>
-                        //node.Type.Equals(NODE_TYPE.INTERFACE));
+                        //node.Type.Equals(NODE_TYPE.INTERFACE.ToString()));
                         // test git
                         // test git 2
                         // test git 3
 
                         var interfaceNodes = root.childrens.FindAll(node =>
-                      node.Type.Equals(NODE_TYPE.INTERFACE)
+                      node.Type.Equals(NODE_TYPE.INTERFACE.ToString())
                       && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
                         foreach (var interfaceNode in interfaceNodes)
                         {
-                            var debug1 = root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD));
+                            var debug1 = root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD.ToString()));
                             
-                            methodDirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD)
+                            methodDirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD.ToString())
                             && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
                             .Equals(interfaceNode.BindingName)));
 
                         }
                     }
 
-
                     // Get method in interface indirect
                     foreach (var interfaceIndirect in interfaceIndirectes)
                     {
                         var interfaceNodes = root.childrens.FindAll(node =>
-                      node.Type.Equals(NODE_TYPE.INTERFACE)
+                      node.Type.Equals(NODE_TYPE.INTERFACE.ToString())
                       && node.BindingName.Equals(interfaceIndirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
                         foreach (var interfaceNode in interfaceNodes)
                         {
-                            methodIndirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD)
+                            methodIndirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD.ToString())
                             && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
                             .Equals(interfaceNode.BindingName)));
                         }
@@ -462,7 +471,7 @@ namespace CSharpCIA.CSharpCIA.API
                             foreach (var superMethodNode in superMethodNodes)
                             {
                                 Dependency dependency = new Dependency();
-                                dependency.Type = DEPENDENCY_TYPE.OVERRIDE;
+                                dependency.Type = DEPENDENCY_TYPE.OVERRIDE.ToString();
                                 dependency.Caller = methodNode.OriginName;
                                 dependency.Callee = superMethodNode.OriginName;
                                 dependencies.Add(dependency);
@@ -477,7 +486,7 @@ namespace CSharpCIA.CSharpCIA.API
                                 foreach (var item in methodDirectOverrides)
                                 {
                                     Dependency dependency = new Dependency();
-                                    dependency.Type = DEPENDENCY_TYPE.OVERRIDE;
+                                    dependency.Type = DEPENDENCY_TYPE.OVERRIDE.ToString();
                                     dependency.Caller = methodNode.OriginName;
                                     dependency.Callee = item.OriginName;
                                     dependencies.Add(dependency);
@@ -490,7 +499,7 @@ namespace CSharpCIA.CSharpCIA.API
                                 foreach (var item in methodIndirectOverrides)
                                 {
                                     Dependency dependency = new Dependency();
-                                    dependency.Type = DEPENDENCY_TYPE.OVERRIDE;
+                                    dependency.Type = DEPENDENCY_TYPE.OVERRIDE.ToString();
                                     dependency.Caller = methodNode.OriginName;
                                     dependency.Callee = item.OriginName;
                                     dependencies.Add(dependency);
@@ -503,154 +512,34 @@ namespace CSharpCIA.CSharpCIA.API
 
             return dependencies;
         }
-        private List<Dependency> ParseInterfaceDependency(InterfaceNode classNode, CSharpCompilation compilation, RootNode root)
+        private List<Dependency> ParseInterfaceDependency(InterfaceNode interfaceNode, CSharpCompilation compilation, RootNode root)
         {
             List<Dependency> dependencies = new List<Dependency>();
-            SemanticModel model = compilation.GetSemanticModel(classNode.SyntaxTree);
+            SemanticModel model = compilation.GetSemanticModel(interfaceNode.SyntaxTree);
 
-            if (classNode is not null)
+            if (interfaceNode is not null)
             {
-                var namedTypeSymbol = model.GetDeclaredSymbol(classNode.SyntaxNode);
+                var namedTypeSymbol = model.GetDeclaredSymbol(interfaceNode.SyntaxNode);
                 var symbol = namedTypeSymbol is null ? null : (INamedTypeSymbol)namedTypeSymbol;
                 if (symbol is not null)
                 {
-                    // INHERIT
-                    if (symbol.BaseType is not null)
-                    {
-                        List<Node> baseClasses = root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.CLASS)
-                        && node.BindingName.Equals(symbol.BaseType.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
-                        foreach (var baseClass in baseClasses)
-                        {
-                            Dependency dependency = new Dependency();
-                            dependency.Type = DEPENDENCY_TYPE.INHERIT;
-                            dependency.Caller = classNode.OriginName;
-                            dependency.Callee = baseClass.OriginName;
-                            dependencies.Add(dependency);
-                        }
-                    }
-
-                    // IMPLEMENT CLASS IMPLEMENT INTERFACE
+                    // IMPLEMENT: INTERFACE IMPLEMENT INTERFACE
                     var interfaceDirectes = symbol.Interfaces; // get list interface relative direct with classNode
 
                     foreach (var interfaceDirect in interfaceDirectes)
                     {
-                        var interfaceNodes = root.childrens.FindAll(node =>
-                           node.Type.Equals(NODE_TYPE.INTERFACE)
+                        var interfaceDirectNodes = root.childrens.FindAll(node =>
+                           node.Type.Equals(NODE_TYPE.INTERFACE.ToString())
                            && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
-                        foreach (var interfaceNode in interfaceNodes)
+                        foreach (var interfaceDirectNode in interfaceDirectNodes)
                         {
                             Dependency dependency = new Dependency();
-                            dependency.Type = DEPENDENCY_TYPE.IMPLEMENT;
-                            dependency.Caller = classNode.OriginName;
-                            dependency.Callee = interfaceNode.OriginName;
+                            dependency.Type = DEPENDENCY_TYPE.IMPLEMENT.ToString();
+                            dependency.Caller = interfaceNode.OriginName;
+                            dependency.Callee = interfaceDirectNode.OriginName;
                             dependencies.Add(dependency);
-                        }
-                    }
-                    //3864 debug
-                    //// IMPLEMENT INTERFACE IMPLEMENT INTERFACE
-                    //foreach (var iNode in root.childrens.FindAll(n => n.Type.Equals(NODE_TYPE.INTERFACE)))
-                    //{
-                    //    iNode.
-                    //}
-
-                    // OVERRIDE
-                    // Get method in classNode
-                    var methodOfClass = root.childrens.FindAll(node =>
-                    node.Type.Equals(NODE_TYPE.METHOD)
-                    && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
-                    .Equals(classNode.BindingName));
-
-                    var interfaceRelatives = symbol.AllInterfaces.ToList(); // get list interface relative with class
-                    var interfaceIndirectes = interfaceRelatives.FindAll(n => !interfaceDirectes.ToList().Contains(n)); // get list interface relative indirect with class
-                    List<Node> methodDirectNodes = new List<Node>();
-                    List<Node> methodIndirectNodes = new List<Node>();
-
-                    // Get method in interface direct
-                    foreach (var interfaceDirect in interfaceDirectes)
-                    {
-                        //  // 3864 debug
-                        //  interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar);
-                        //  var test1 = root.childrens.FindAll(node =>
-                        //node.Type.Equals(NODE_TYPE.INTERFACE));
-                        // test git
-                        // test git 2
-                        // test git 3
-
-                        var interfaceNodes = root.childrens.FindAll(node =>
-                      node.Type.Equals(NODE_TYPE.INTERFACE)
-                      && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
-
-                        foreach (var interfaceNode in interfaceNodes)
-                        {
-                            methodDirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD)
-                            && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
-                            .Equals(interfaceNode.BindingName)));
-                        }
-                    }
-                    // Get method in interface indirect
-                    foreach (var interfaceIndirect in interfaceIndirectes)
-                    {
-                        var interfaceNodes = root.childrens.FindAll(node =>
-                      node.Type.Equals(NODE_TYPE.INTERFACE)
-                      && node.BindingName.Equals(interfaceIndirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
-
-                        foreach (var interfaceNode in interfaceNodes)
-                        {
-                            methodIndirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD)
-                            && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
-                            .Equals(interfaceNode.BindingName)));
-                        }
-                    }
-
-                    foreach (var methodNode in methodOfClass)
-                    {
-                        // OVERRIDE: CLASS - CLASS
-                        var methodSymbol = model.GetDeclaredSymbol(methodNode.SyntaxNode);
-                        var iMethodSymbol = methodSymbol is null ? null : (IMethodSymbol)methodSymbol;
-
-                        if (iMethodSymbol != null && iMethodSymbol.IsOverride)
-                        {
-                            var superMethodNodes = root.childrens.FindAll(n => n.BindingName.Equals(iMethodSymbol.OverriddenMethod.ToString().Replace('.', Path.DirectorySeparatorChar)));
-
-                            foreach (var superMethodNode in superMethodNodes)
-                            {
-                                Dependency dependency = new Dependency();
-                                dependency.Type = DEPENDENCY_TYPE.OVERRIDE;
-                                dependency.Caller = methodNode.OriginName;
-                                dependency.Callee = superMethodNode.OriginName;
-                                dependencies.Add(dependency);
-                            }
-                        }
-                        else
-                        {
-                            // OVERRIDE: CLASS - INTERFACE DIRECT
-                            var methodDirectOverrides = methodDirectNodes.FindAll(n => n.QualifiedName.Equals(methodNode.QualifiedName));
-                            if (methodDirectOverrides.Count > 0)
-                            {
-                                foreach (var item in methodDirectOverrides)
-                                {
-                                    Dependency dependency = new Dependency();
-                                    dependency.Type = DEPENDENCY_TYPE.OVERRIDE;
-                                    dependency.Caller = methodNode.OriginName;
-                                    dependency.Callee = item.OriginName;
-                                    dependencies.Add(dependency);
-                                }
-                            }
-                            // OVERRIDE: CLASS - INTERFACE INDIRECT
-                            else
-                            {
-                                var methodIndirectOverrides = methodIndirectNodes.FindAll(n => n.QualifiedName.Equals(methodNode.QualifiedName));
-                                foreach (var item in methodIndirectOverrides)
-                                {
-                                    Dependency dependency = new Dependency();
-                                    dependency.Type = DEPENDENCY_TYPE.OVERRIDE;
-                                    dependency.Caller = methodNode.OriginName;
-                                    dependency.Callee = item.OriginName;
-                                    dependencies.Add(dependency);
-                                }
-                            }
                         }
                     }
                 }

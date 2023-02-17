@@ -11,7 +11,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
     public class FieldNode : Node
     {
 
-        public override NODE_TYPE Type => NODE_TYPE.FIELD;
+        public override string Type => NODE_TYPE.FIELD.ToString();
 
         public FieldNode(uint id, string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode) : base(id, simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
         {

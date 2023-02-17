@@ -10,7 +10,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
 {
     public class InterfaceNode : Node
     {
-        public override NODE_TYPE Type => NODE_TYPE.INTERFACE;
+        public override string Type => NODE_TYPE.INTERFACE.ToString();
         public InterfaceNode(uint id, string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode) : base(id, simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
         {
 

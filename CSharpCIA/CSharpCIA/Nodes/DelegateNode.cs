@@ -14,6 +14,6 @@ namespace CSharpCIA.CSharpCIA.Nodes
         {
         }
 
-        public override NODE_TYPE Type => NODE_TYPE.DELEGATE;
+        public override string Type => NODE_TYPE.DELEGATE.ToString();
     }
 }

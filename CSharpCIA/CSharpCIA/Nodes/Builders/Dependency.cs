@@ -5,10 +5,15 @@ namespace CSharpCIA.CSharpCIA.Nodes.Builders
     {
         private string caller;
         private string callee;
-        private DEPENDENCY_TYPE type;
+        private string type;
 
-        public DEPENDENCY_TYPE Type { get => type; set => type = value; }
+        public string Type { get => type; set => type = value; }
         public string Caller { get => caller; set => caller = value; }
         public string Callee { get => callee; set => callee = value; }
+
+        public override string ToString()
+        {
+            return Type.ToString() + " " + Callee;
+        }
     }
 }
