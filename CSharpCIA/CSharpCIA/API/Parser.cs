@@ -15,6 +15,7 @@ using System.Xml.Linq;
 using CSharpCIA.CSharpCIA.Helpers;
 using CSharpCIA.CSharpCIA.Nodes.Builders;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace CSharpCIA.CSharpCIA.API
 {
@@ -176,6 +177,28 @@ namespace CSharpCIA.CSharpCIA.API
                     MethodNode methodNode = new MethodNode(countId, methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, body);
                     transferNodes.Add(methodNode);
                 }
+                else if (child is InterfaceDeclarationSyntax)
+                {
+                    countId++;
+                    InterfaceDeclarationSyntax interfaceDeclarationSyntax = (InterfaceDeclarationSyntax)child;
+
+
+                    // Config new transfer Node
+                    // Make qualifiedName for MethodNode
+                    Boolean check = false;
+                    string simpleName = interfaceDeclarationSyntax.Identifier.ToString();
+                    string qualifiedName = simpleName;
+                    string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
+
+
+                    InterfaceNode interfaceNode = new InterfaceNode(countId, interfaceDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
+                    transferNodes.Add(interfaceNode);
+                    foreach (var item in interfaceDeclarationSyntax.Members)
+                    {
+                        transferNodes.AddRange(ParseNode(ref countId, item, sourcePath, originName));
+                    }
+                }
+                // 3864 Improve
                 //else if (child is GlobalStatementSyntax)
                 //{
                 //    countId++;
@@ -228,9 +251,14 @@ namespace CSharpCIA.CSharpCIA.API
                 {
                     ClassNode classNode = (ClassNode)child;
                     dependencies.AddRange(ParseClassDependency(classNode, compilation, root));
-
-
                 }
+                // Parse Interface
+                foreach (Node child in root.childrens.FindAll(n => n.Type is NODE_TYPE.INTERFACE))
+                {
+                    InterfaceNode classNode = (InterfaceNode)child;
+                    dependencies.AddRange(ParseInterfaceDependency(classNode, compilation, root));
+                }
+                
             }
 
             return dependencies;
@@ -314,13 +342,13 @@ namespace CSharpCIA.CSharpCIA.API
                         }
                     }
 
-                    // IMPLEMENT
+                    // IMPLEMENT CLASS IMPLEMENT INTERFACE
                     var interfaceDirectes = symbol.Interfaces; // get list interface relative direct with classNode
 
                     foreach (var interfaceDirect in interfaceDirectes)
                     {
                         var interfaceNodes = root.childrens.FindAll(node =>
-                           node.Equals(NODE_TYPE.INTERFACE)
+                           node.Type.Equals(NODE_TYPE.INTERFACE)
                            && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
                         foreach (var interfaceNode in interfaceNodes)
@@ -332,6 +360,166 @@ namespace CSharpCIA.CSharpCIA.API
                             dependencies.Add(dependency);
                         }
                     }
+
+                    // OVERRIDE
+                    // Get method in classNode
+                    var methodOfClass = root.childrens.FindAll(node =>
+                    node.Type.Equals(NODE_TYPE.METHOD)
+                    && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
+                    .Equals(classNode.BindingName));
+
+                    var interfaceRelatives = symbol.AllInterfaces.ToList(); // get list interface relative with class
+                    var interfaceIndirectes = interfaceRelatives.FindAll(n => !interfaceDirectes.ToList().Contains(n)); // get list interface relative indirect with class
+                    List<Node> methodDirectNodes = new List<Node>();
+                    List<Node> methodIndirectNodes = new List<Node>();
+
+                    // Get method in interface direct
+                    foreach (var interfaceDirect in interfaceDirectes)
+                    {
+                        //  // 3864 debug
+                        //  interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar);
+                        //  var test1 = root.childrens.FindAll(node =>
+                        //node.Type.Equals(NODE_TYPE.INTERFACE));
+                        // test git
+                        // test git 2
+                        // test git 3
+
+                        var interfaceNodes = root.childrens.FindAll(node =>
+                      node.Type.Equals(NODE_TYPE.INTERFACE)
+                      && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                        foreach (var interfaceNode in interfaceNodes)
+                        {
+                            var debug1 = root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD));
+                            
+                            methodDirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD)
+                            && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
+                            .Equals(interfaceNode.BindingName)));
+
+                        }
+                    }
+
+
+                    // Get method in interface indirect
+                    foreach (var interfaceIndirect in interfaceIndirectes)
+                    {
+                        var interfaceNodes = root.childrens.FindAll(node =>
+                      node.Type.Equals(NODE_TYPE.INTERFACE)
+                      && node.BindingName.Equals(interfaceIndirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                        foreach (var interfaceNode in interfaceNodes)
+                        {
+                            methodIndirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD)
+                            && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
+                            .Equals(interfaceNode.BindingName)));
+                        }
+                    }
+
+                    foreach (var methodNode in methodOfClass)
+                    {
+                        // OVERRIDE: CLASS - CLASS
+                        var methodSymbol = model.GetDeclaredSymbol(methodNode.SyntaxNode);
+                        var iMethodSymbol = methodSymbol is null ? null : (IMethodSymbol)methodSymbol;
+
+                        if (iMethodSymbol != null && iMethodSymbol.IsOverride)
+                        {
+                            var superMethodNodes = root.childrens.FindAll(n => n.BindingName.Equals(iMethodSymbol.OverriddenMethod.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                            foreach (var superMethodNode in superMethodNodes)
+                            {
+                                Dependency dependency = new Dependency();
+                                dependency.Type = DEPENDENCY_TYPE.OVERRIDE;
+                                dependency.Caller = methodNode.OriginName;
+                                dependency.Callee = superMethodNode.OriginName;
+                                dependencies.Add(dependency);
+                            }
+                        }
+                        else
+                        {
+                            // OVERRIDE: CLASS - INTERFACE DIRECT
+                            var methodDirectOverrides = methodDirectNodes.FindAll(n => n.QualifiedName.Equals(methodNode.QualifiedName));
+                            if (methodDirectOverrides.Count > 0)
+                            {
+                                foreach (var item in methodDirectOverrides)
+                                {
+                                    Dependency dependency = new Dependency();
+                                    dependency.Type = DEPENDENCY_TYPE.OVERRIDE;
+                                    dependency.Caller = methodNode.OriginName;
+                                    dependency.Callee = item.OriginName;
+                                    dependencies.Add(dependency);
+                                }
+                            }
+                            // OVERRIDE: CLASS - INTERFACE INDIRECT
+                            else
+                            {
+                                var methodIndirectOverrides = methodIndirectNodes.FindAll(n => n.QualifiedName.Equals(methodNode.QualifiedName));
+                                foreach (var item in methodIndirectOverrides)
+                                {
+                                    Dependency dependency = new Dependency();
+                                    dependency.Type = DEPENDENCY_TYPE.OVERRIDE;
+                                    dependency.Caller = methodNode.OriginName;
+                                    dependency.Callee = item.OriginName;
+                                    dependencies.Add(dependency);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return dependencies;
+        }
+        private List<Dependency> ParseInterfaceDependency(InterfaceNode classNode, CSharpCompilation compilation, RootNode root)
+        {
+            List<Dependency> dependencies = new List<Dependency>();
+            SemanticModel model = compilation.GetSemanticModel(classNode.SyntaxTree);
+
+            if (classNode is not null)
+            {
+                var namedTypeSymbol = model.GetDeclaredSymbol(classNode.SyntaxNode);
+                var symbol = namedTypeSymbol is null ? null : (INamedTypeSymbol)namedTypeSymbol;
+                if (symbol is not null)
+                {
+                    // INHERIT
+                    if (symbol.BaseType is not null)
+                    {
+                        List<Node> baseClasses = root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.CLASS)
+                        && node.BindingName.Equals(symbol.BaseType.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                        foreach (var baseClass in baseClasses)
+                        {
+                            Dependency dependency = new Dependency();
+                            dependency.Type = DEPENDENCY_TYPE.INHERIT;
+                            dependency.Caller = classNode.OriginName;
+                            dependency.Callee = baseClass.OriginName;
+                            dependencies.Add(dependency);
+                        }
+                    }
+
+                    // IMPLEMENT CLASS IMPLEMENT INTERFACE
+                    var interfaceDirectes = symbol.Interfaces; // get list interface relative direct with classNode
+
+                    foreach (var interfaceDirect in interfaceDirectes)
+                    {
+                        var interfaceNodes = root.childrens.FindAll(node =>
+                           node.Type.Equals(NODE_TYPE.INTERFACE)
+                           && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                        foreach (var interfaceNode in interfaceNodes)
+                        {
+                            Dependency dependency = new Dependency();
+                            dependency.Type = DEPENDENCY_TYPE.IMPLEMENT;
+                            dependency.Caller = classNode.OriginName;
+                            dependency.Callee = interfaceNode.OriginName;
+                            dependencies.Add(dependency);
+                        }
+                    }
+                    //3864 debug
+                    //// IMPLEMENT INTERFACE IMPLEMENT INTERFACE
+                    //foreach (var iNode in root.childrens.FindAll(n => n.Type.Equals(NODE_TYPE.INTERFACE)))
+                    //{
+                    //    iNode.
+                    //}
 
                     // OVERRIDE
                     // Get method in classNode
