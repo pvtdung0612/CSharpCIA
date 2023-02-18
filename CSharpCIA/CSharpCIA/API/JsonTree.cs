@@ -13,8 +13,6 @@ namespace CSharpCIA.CSharpCIA.API
     internal class JsonTree
     {
         public static bool ExportTreeToJson(RootNode rootNode, string fileOutput) {
-
-
             // Chuyển danh sách các đối tượng thành chuỗi JSON
             var json = JsonConvert.SerializeObject(rootNode);
 
