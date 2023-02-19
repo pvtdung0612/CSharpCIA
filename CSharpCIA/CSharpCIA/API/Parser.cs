@@ -277,6 +277,8 @@ namespace CSharpCIA.CSharpCIA.API
                     dependencies.AddRange(ParseInheritDependency(child, compilation, root));
                     dependencies.AddRange(ParseImplementDependency(child, compilation, root));
                     dependencies.AddRange(ParseOverrideDependency(child, compilation, root));
+                    dependencies.AddRange(ParseCallbackDependency(child, compilation, root));
+                    dependencies.AddRange(ParseOwnDependency(child, root));
                 }
 
                 // ADD dependencies into node in root
@@ -580,6 +582,72 @@ namespace CSharpCIA.CSharpCIA.API
 
             return dependencies;
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="node">Type is method node</param>
+        /// <param name="compilation"></param>
+        /// <param name="root"></param>
+        /// <returns></returns>
+        private List<Dependency> ParseCallbackDependency(Node node, CSharpCompilation compilation, RootNode root)
+        {
+            var dependencies = new List<Dependency>();
+            if (!node.Type.Equals(NODE_TYPE.METHOD.ToString()))
+                return dependencies;
+            SemanticModel model = compilation.GetSemanticModel(node.SyntaxTree);
+            MethodDeclarationSyntax methodSyntax = (MethodDeclarationSyntax)node.SyntaxNode;
+
+            if (methodSyntax is not null && methodSyntax.ParameterList is not null && model is not null)
+            {
+                var parameterSyntaxes = methodSyntax.ParameterList.Parameters;
+
+                foreach (var parameterSyntax in parameterSyntaxes)
+                {
+                    var symbol = model.GetDeclaredSymbol(parameterSyntax);
+                    if (symbol is not null)
+                    {
+                        var delegateNodes = root.childrens.FindAll(n => n.Type.Equals(NODE_TYPE.DELEGATE)
+                        && n.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                        foreach (var delegateNode in delegateNodes)
+                        {
+                            Dependency dependency = new Dependency();
+                            dependency.Type = DEPENDENCY_TYPE.CALLBACK.ToString();
+                            dependency.Caller = node.OriginName;
+                            dependency.Callee = delegateNode.OriginName;
+                            dependencies.Add(dependency);
+                        }
+                    }
+                }
+            }
+
+            return dependencies;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="node">Type is all node</param>
+        /// <param name="root"></param>
+        /// <returns></returns>
+        private List<Dependency> ParseOwnDependency(Node node, RootNode root)
+        {
+            var dependencies = new List<Dependency>();
+
+            foreach (var item in root.childrens)
+            {
+                if (item.BindingName.StartsWith(node.BindingName))
+                {
+                    Dependency dependency = new Dependency();
+                    dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
+                    dependency.Caller = node.OriginName;
+                    dependency.Callee = item.OriginName;
+                    dependencies.Add(dependency);
+                }
+            }
+
+            return dependencies;
+        }
+
         #endregion
 
         #region History

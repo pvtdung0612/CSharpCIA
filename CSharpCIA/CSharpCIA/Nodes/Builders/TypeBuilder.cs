@@ -10,10 +10,11 @@ namespace CSharpCIA.CSharpCIA.Nodes.Builders
     {
         INVOKE,
         USE,
-        //MEMBER,
+        OWN,
         INHERIT,
         IMPLEMENT,
         OVERRIDE,
+        CALLBACK,
     }
     public enum NODE_TYPE
     {
