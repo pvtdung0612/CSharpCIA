@@ -1,12 +1,12 @@
 ﻿using CSharpCIA.CSharpCIA.Nodes.Builders;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Operations;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace CSharpCIA.CSharpCIA.Nodes
 {
@@ -24,5 +24,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
 
         [JsonIgnore]
         public List<SyntaxTree> trees;
+
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿using CSharpCIA.CSharpCIA.Nodes.Builders;
 using Microsoft.CodeAnalysis;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;

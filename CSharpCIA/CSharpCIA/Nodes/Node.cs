@@ -12,15 +12,15 @@ namespace CSharpCIA.CSharpCIA.Nodes
 {
     public abstract class Node
     {
-        private Guid id;
-        private string simpleName; // Ex: MethodName
-        private string qualifiedName; // Ex: MethodName(int, int)
-        private string originName; // Ex: Directory/File.cs/Namespace/Class/Method(int, int)
-        private string bindingName; // For binding Node, equal: originName remove sourcePath, Ex: Namespace/Class/Method(int, int) 
-        private string sourcePath; // Ex: Directory/Class
-        private SyntaxTree syntaxTree; // For get tree of the file and find path binding
-        private SyntaxNode syntaxNode; // For get
-        private List<Dependency> dependencies;
+        protected Guid id;
+        protected string simpleName; // Ex: MethodName
+        protected string qualifiedName; // Ex: MethodName(int, int)
+        protected string originName; // Ex: Directory/File.cs/Namespace/Class/Method(int, int)
+        protected string bindingName; // For binding Node, equal: originName remove sourcePath, Ex: Namespace/Class/Method(int, int) 
+        protected string sourcePath; // Ex: Directory/Class
+        protected SyntaxTree syntaxTree; // For get tree of the file and find path binding
+        protected SyntaxNode syntaxNode; // For get syntaxNode from roslyn 
+        protected List<Dependency> dependencies;
 
         protected Node(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode)
         {
@@ -31,7 +31,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
             this.SourcePath = sourcePath;
             this.SyntaxTree = syntaxTree;
             this.SyntaxNode = syntaxNode;
-            this.dependencies = new List<Dependency>();
+            this.Dependencies = new List<Dependency>();
         }
 
         public abstract string Type { get; }
@@ -49,7 +49,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
                     // Node is Root
                     if (originName.Equals(sourcePath))
                     {
-                        bindingName = sourcePath;
+                        bindingName = "Root";
                     }
                     // Node is not Root
                     else
@@ -87,10 +87,10 @@ namespace CSharpCIA.CSharpCIA.Nodes
         [JsonIgnore]
         public SyntaxNode SyntaxNode { get => syntaxNode; set => syntaxNode = value; }
         public List<Dependency> Dependencies { get => dependencies; set => dependencies = value; }
-    
+
         public override string ToString()
         {
-            return BindingName;
+            return bindingName;
         }
     }
 }

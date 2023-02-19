@@ -81,7 +81,7 @@ namespace CSharpCIA.CSharpCIA.API
                     // Get Childrens
                     foreach (var item in compilationUnitSyntax.Members)
                     {
-                        root.childrens.AddRange(ParseNode(item, filePath, filePath));
+                        ParseNode(root.childrens, item, filePath, filePath);
                     }
                 }
             }
@@ -95,25 +95,37 @@ namespace CSharpCIA.CSharpCIA.API
         /// <param name="sourcePath"></param>
         /// <param name="parentPath"></param>
         /// <returns></returns>
-        private List<Node> ParseNode(SyntaxNode child, string sourcePath, string parentPath)
+        private void ParseNode(List<Node> transferNodes, SyntaxNode child, string sourcePath, string parentPath)
         {
-            List<Node> transferNodes = null;
-
             if (child != null)
             {
-                transferNodes = new List<Node>();
                 if (child is NamespaceDeclarationSyntax)
                 {
                     NamespaceDeclarationSyntax namespaceDeclarationSyntax = (NamespaceDeclarationSyntax)child;
 
                     // Config new transfer Node
                     string originName = parentPath + Path.DirectorySeparatorChar + namespaceDeclarationSyntax.Name.ToString().Replace('.', Path.DirectorySeparatorChar);
-
                     NamespaceNode namespaceNode = new NamespaceNode(namespaceDeclarationSyntax.Name.ToString(), namespaceDeclarationSyntax.Name.ToString(), originName, sourcePath, child.SyntaxTree, child);
-                    transferNodes.Add(namespaceNode);
+
+                    // Check namespace is exits but different file
+                    bool isExitNamespace = false;
+                    foreach (var item in transferNodes)
+                    {
+                        if (item.BindingName.Equals(namespaceNode.BindingName))
+                            isExitNamespace= true;
+                    }
+                    if (isExitNamespace)
+                    {
+                        namespaceNode.AllOriginNames.Add(originName);
+                        namespaceNode.AllSourcePaths.Add(sourcePath);
+                    } else
+                    {
+                        transferNodes.Add(namespaceNode);
+                    }
+
                     foreach (var item in namespaceDeclarationSyntax.Members)
                     {
-                        transferNodes.AddRange(ParseNode(item, sourcePath, originName));
+                        ParseNode(transferNodes, item, sourcePath, originName);
                     }
                 }
                 else if (child is ClassDeclarationSyntax)
@@ -127,7 +139,7 @@ namespace CSharpCIA.CSharpCIA.API
                     transferNodes.Add(classNode);
                     foreach (var item in classDeclaration.Members)
                     {
-                        transferNodes.AddRange(ParseNode(item, sourcePath, originName));
+                        ParseNode(transferNodes, item, sourcePath, originName);
                     }
                 }
                 else if (child is FieldDeclarationSyntax)
@@ -187,7 +199,7 @@ namespace CSharpCIA.CSharpCIA.API
                     transferNodes.Add(interfaceNode);
                     foreach (var item in interfaceDeclarationSyntax.Members)
                     {
-                        transferNodes.AddRange(ParseNode(item, sourcePath, originName));
+                        ParseNode(transferNodes, item, sourcePath, originName);
                     }
                 }
                 else if (child is StructDeclarationSyntax)
@@ -251,8 +263,6 @@ namespace CSharpCIA.CSharpCIA.API
                 //    transferNodes.Add(methodNode);
                 //}
             }
-
-            return transferNodes;
         }
         #endregion
 
@@ -633,9 +643,23 @@ namespace CSharpCIA.CSharpCIA.API
         {
             var dependencies = new List<Dependency>();
 
+            // Thêm quan hệ sở hữu cho những node có cấp thấp hơn namespace
             foreach (var item in root.childrens)
             {
-                if (item.BindingName.StartsWith(node.BindingName))
+                // Ex:
+                // MyApp
+                // Test10
+                // Test10//Animal
+                // Test10//Animal//Sound
+
+                string childPath = null;
+                if (node.BindingName.Length < item.BindingName.Length)
+                {
+                    childPath = item.BindingName.Remove(0, node.BindingName.Length);
+                }
+                if (childPath is not null
+                    && childPath.Count(c => c.Equals(Path.DirectorySeparatorChar)) == 1
+                    && item.BindingName.StartsWith(node.BindingName))
                 {
                     Dependency dependency = new Dependency();
                     dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
@@ -643,6 +667,16 @@ namespace CSharpCIA.CSharpCIA.API
                     dependency.Callee = item.OriginName;
                     dependencies.Add(dependency);
                 }
+            }
+
+            // Thêm quan hệ giữa Root và namespace
+            if (node.Type.Equals(NODE_TYPE.NAMESPACE.ToString()) && node.BindingName.Count(c => c.Equals(Path.DirectorySeparatorChar)) == 0)
+            {
+                Dependency dependency = new Dependency();
+                dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
+                dependency.Caller = "Root";
+                dependency.Callee = node.OriginName;
+                dependencies.Add(dependency);
             }
 
             return dependencies;
