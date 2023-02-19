@@ -12,7 +12,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
 {
     public class RootNode : Node
     {
-        public RootNode(uint id, string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode) : base(id, simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
+        public RootNode(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode) : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
         {
             this.childrens = new List<Node>();
             this.trees = new List<SyntaxTree>();

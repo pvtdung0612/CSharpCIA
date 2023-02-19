@@ -12,7 +12,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
 {
     public abstract class Node
     {
-        private uint id;
+        private Guid id;
         private string simpleName; // Ex: MethodName
         private string qualifiedName; // Ex: MethodName(int, int)
         private string originName; // Ex: Directory/File.cs/Namespace/Class/Method(int, int)
@@ -22,9 +22,9 @@ namespace CSharpCIA.CSharpCIA.Nodes
         private SyntaxNode syntaxNode; // For get
         private List<Dependency> dependencies;
 
-        protected Node(uint id, string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode)
+        protected Node(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode)
         {
-            this.Id = id;
+            this.id = Guid.NewGuid();
             this.SimpleName = simpleName;
             this.QualifiedName = qualifiedName;
             this.OriginName = originName;
@@ -35,7 +35,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
         }
 
         public abstract string Type { get; }
-        public uint Id { get => id; set => id = value; }
+        public Guid Id { get => id; }
         public string SimpleName { get => simpleName; set => simpleName = value; }
         public string QualifiedName { get => qualifiedName; set => qualifiedName = value; }
         public string OriginName

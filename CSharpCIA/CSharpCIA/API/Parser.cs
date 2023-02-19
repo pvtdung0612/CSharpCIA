@@ -65,8 +65,7 @@ namespace CSharpCIA.CSharpCIA.API
         /// <returns>Root</returns>
         public RootNode ParseNode(string path)
         {
-            uint countId = 0;
-            RootNode root = new RootNode(countId, "Root", "Root", path, path, null, null);
+            RootNode root = new RootNode("Root", "Root", path, path, null, null);
 
             foreach (var filePath in FileHelper.GetSourceFiles(path))
             {
@@ -82,7 +81,7 @@ namespace CSharpCIA.CSharpCIA.API
                     // Get Childrens
                     foreach (var item in compilationUnitSyntax.Members)
                     {
-                        root.childrens.AddRange(ParseNode(ref countId, item, filePath, filePath));
+                        root.childrens.AddRange(ParseNode(item, filePath, filePath));
                     }
                 }
             }
@@ -92,12 +91,11 @@ namespace CSharpCIA.CSharpCIA.API
         /// <summary>
         /// Parse node at root
         /// </summary>
-        /// <param name="countId"></param>
         /// <param name="child"></param>
         /// <param name="sourcePath"></param>
         /// <param name="parentPath"></param>
         /// <returns></returns>
-        private List<Node> ParseNode(ref uint countId, SyntaxNode child, string sourcePath, string parentPath)
+        private List<Node> ParseNode(SyntaxNode child, string sourcePath, string parentPath)
         {
             List<Node> transferNodes = null;
 
@@ -106,32 +104,30 @@ namespace CSharpCIA.CSharpCIA.API
                 transferNodes = new List<Node>();
                 if (child is NamespaceDeclarationSyntax)
                 {
-                    countId++;
                     NamespaceDeclarationSyntax namespaceDeclarationSyntax = (NamespaceDeclarationSyntax)child;
 
                     // Config new transfer Node
                     string originName = parentPath + Path.DirectorySeparatorChar + namespaceDeclarationSyntax.Name.ToString().Replace('.', Path.DirectorySeparatorChar);
 
-                    NamespaceNode namespaceNode = new NamespaceNode(countId, namespaceDeclarationSyntax.Name.ToString(), namespaceDeclarationSyntax.Name.ToString(), originName, sourcePath, child.SyntaxTree, child);
+                    NamespaceNode namespaceNode = new NamespaceNode(namespaceDeclarationSyntax.Name.ToString(), namespaceDeclarationSyntax.Name.ToString(), originName, sourcePath, child.SyntaxTree, child);
                     transferNodes.Add(namespaceNode);
                     foreach (var item in namespaceDeclarationSyntax.Members)
                     {
-                        transferNodes.AddRange(ParseNode(ref countId, item, sourcePath, originName));
+                        transferNodes.AddRange(ParseNode(item, sourcePath, originName));
                     }
                 }
                 else if (child is ClassDeclarationSyntax)
                 {
-                    countId++;
                     ClassDeclarationSyntax classDeclaration = (ClassDeclarationSyntax)child;
 
                     // Config new transfer Node
                     string originName = parentPath + Path.DirectorySeparatorChar + classDeclaration.Identifier.ToString();
 
-                    ClassNode classNode = new ClassNode(countId, classDeclaration.Identifier.ToString(), classDeclaration.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child);
+                    ClassNode classNode = new ClassNode(classDeclaration.Identifier.ToString(), classDeclaration.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child);
                     transferNodes.Add(classNode);
                     foreach (var item in classDeclaration.Members)
                     {
-                        transferNodes.AddRange(ParseNode(ref countId, item, sourcePath, originName));
+                        transferNodes.AddRange(ParseNode(item, sourcePath, originName));
                     }
                 }
                 else if (child is FieldDeclarationSyntax)
@@ -142,25 +138,22 @@ namespace CSharpCIA.CSharpCIA.API
                         // Config new transfer Node
                         string originName = parentPath + Path.DirectorySeparatorChar + variable.Identifier.ToString();
 
-                        countId++;
-                        FieldNode fieldNode = new FieldNode(countId, variable.Identifier.ToString(), variable.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child);
+                        FieldNode fieldNode = new FieldNode(variable.Identifier.ToString(), variable.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child);
                         transferNodes.Add(fieldNode);
                     }
                 }
                 else if (child is PropertyDeclarationSyntax)
                 {
-                    countId++;
                     PropertyDeclarationSyntax propertyDeclarationSyntax = (PropertyDeclarationSyntax)child;
 
                     // Config new transfer Node
                     string originName = parentPath + Path.DirectorySeparatorChar + propertyDeclarationSyntax.Identifier.ToString();
 
-                    PropertyNode propertyNode = new PropertyNode(countId, propertyDeclarationSyntax.Identifier.ToString(), propertyDeclarationSyntax.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child);
+                    PropertyNode propertyNode = new PropertyNode(propertyDeclarationSyntax.Identifier.ToString(), propertyDeclarationSyntax.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child);
                     transferNodes.Add(propertyNode);
                 }
                 else if (child is MethodDeclarationSyntax)
                 {
-                    countId++;
                     MethodDeclarationSyntax methodDeclarationSyntax = (MethodDeclarationSyntax)child;
 
                     // Config new transfer Node
@@ -178,12 +171,11 @@ namespace CSharpCIA.CSharpCIA.API
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
 
                     string body = methodDeclarationSyntax.Body is null ? null : methodDeclarationSyntax.Body.ToString();
-                    MethodNode methodNode = new MethodNode(countId, methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, body);
+                    MethodNode methodNode = new MethodNode(methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, body);
                     transferNodes.Add(methodNode);
                 }
                 else if (child is InterfaceDeclarationSyntax)
                 {
-                    countId++;
                     InterfaceDeclarationSyntax interfaceDeclarationSyntax = (InterfaceDeclarationSyntax)child;
 
                     // Config new transfer Node
@@ -191,16 +183,15 @@ namespace CSharpCIA.CSharpCIA.API
                     string qualifiedName = simpleName;
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
 
-                    InterfaceNode interfaceNode = new InterfaceNode(countId, interfaceDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
+                    InterfaceNode interfaceNode = new InterfaceNode(interfaceDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
                     transferNodes.Add(interfaceNode);
                     foreach (var item in interfaceDeclarationSyntax.Members)
                     {
-                        transferNodes.AddRange(ParseNode(ref countId, item, sourcePath, originName));
+                        transferNodes.AddRange(ParseNode(item, sourcePath, originName));
                     }
                 }
                 else if (child is StructDeclarationSyntax)
                 {
-                    countId++;
                     StructDeclarationSyntax structDeclarationSyntax = (StructDeclarationSyntax)child;
 
                     // Config new transfer Node
@@ -208,12 +199,11 @@ namespace CSharpCIA.CSharpCIA.API
                     string qualifiedName = simpleName;
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
 
-                    StructNode structNode = new StructNode(countId, structDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
+                    StructNode structNode = new StructNode(structDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
                     transferNodes.Add(structNode);
                 }
                 else if (child is EnumDeclarationSyntax)
                 {
-                    countId++;
                     EnumDeclarationSyntax enumDeclarationSyntax = (EnumDeclarationSyntax)child;
 
                     // Config new transfer Node
@@ -221,12 +211,11 @@ namespace CSharpCIA.CSharpCIA.API
                     string qualifiedName = simpleName;
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
 
-                    EnumNode enumNode = new EnumNode(countId, enumDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
+                    EnumNode enumNode = new EnumNode(enumDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
                     transferNodes.Add(enumNode);
                 }
                 else if (child is DelegateDeclarationSyntax)
                 {
-                    countId++;
                     DelegateDeclarationSyntax delegateDeclarationSyntax = (DelegateDeclarationSyntax)child;
 
                     // Config new transfer Node
@@ -234,14 +223,13 @@ namespace CSharpCIA.CSharpCIA.API
                     string qualifiedName = simpleName;
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
 
-                    DelegateNode delegateNode = new DelegateNode(countId, delegateDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
+                    DelegateNode delegateNode = new DelegateNode(delegateDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
                     transferNodes.Add(delegateNode);
                 }
 
                 // 3864 Improve
                 //else if (child is GlobalStatementSyntax)
                 //{
-                //    countId++;
                 //    MethodDeclarationSyntax methodDeclarationSyntax = (MethodDeclarationSyntax)child;
 
 
@@ -259,7 +247,7 @@ namespace CSharpCIA.CSharpCIA.API
                 //    qualifiedName += ")";
                 //    string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
 
-                //    MethodNode methodNode = new MethodNode(countId, methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, methodDeclarationSyntax.Body.ToString());
+                //    MethodNode methodNode = new MethodNode(methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, methodDeclarationSyntax.Body.ToString());
                 //    transferNodes.Add(methodNode);
                 //}
             }

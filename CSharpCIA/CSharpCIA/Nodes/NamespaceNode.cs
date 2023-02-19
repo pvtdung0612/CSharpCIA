@@ -13,7 +13,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
 
         public override string Type => NODE_TYPE.NAMESPACE.ToString();
 
-        public NamespaceNode(uint id, string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode) : base(id, simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
+        public NamespaceNode(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode) : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
         {
         }
 

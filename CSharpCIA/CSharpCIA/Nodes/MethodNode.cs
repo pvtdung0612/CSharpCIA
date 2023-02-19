@@ -13,7 +13,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
         private string? body;
         public string? Body { get => body; set => body = value; }
         public override string Type => NODE_TYPE.METHOD.ToString();
-        public MethodNode(uint id, string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode, string body) : base(id, simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
+        public MethodNode(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode, string body) : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
         {
             this.Body = body;
         }
