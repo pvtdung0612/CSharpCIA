@@ -108,20 +108,19 @@ namespace CSharpCIA.CSharpCIA.API
                     NamespaceNode namespaceNode = new NamespaceNode(namespaceDeclarationSyntax.Name.ToString(), namespaceDeclarationSyntax.Name.ToString(), originName, sourcePath, child.SyntaxTree, child);
 
                     // Check namespace is exits but different file
-                    bool isExitNamespace = false;
+                    bool isExistNamespace = false;
                     foreach (var item in transferNodes)
                     {
                         if (item.BindingName.Equals(namespaceNode.BindingName))
-                            isExitNamespace= true;
+                        {
+                            isExistNamespace = true;
+                            ((NamespaceNode)item).AllOriginNames.Add(originName);
+                            ((NamespaceNode)item).AllSourcePaths.Add(sourcePath);
+                            break;
+                        }
                     }
-                    if (isExitNamespace)
-                    {
-                        namespaceNode.AllOriginNames.Add(originName);
-                        namespaceNode.AllSourcePaths.Add(sourcePath);
-                    } else
-                    {
+                    if (!isExistNamespace)
                         transferNodes.Add(namespaceNode);
-                    }
 
                     foreach (var item in namespaceDeclarationSyntax.Members)
                     {
