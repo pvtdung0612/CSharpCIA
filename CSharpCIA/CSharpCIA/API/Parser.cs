@@ -290,16 +290,6 @@ namespace CSharpCIA.CSharpCIA.API
                     dependencies.AddRange(ParseCallbackDependency(child, compilation, root));
                     dependencies.AddRange(ParseOwnDependency(child, root));
                 }
-
-                // ADD dependencies into node in root
-                foreach (var dependency in dependencies)
-                {
-                    root.childrens.ForEach(n =>
-                    {
-                        if (n.OriginName.Equals(dependency.Caller))
-                            n.Dependencies.Add(dependency);
-                    });
-                }
             }
 
             return dependencies;
@@ -338,8 +328,8 @@ namespace CSharpCIA.CSharpCIA.API
                             {
                                 Dependency d = new Dependency();
                                 d.Type = DEPENDENCY_TYPE.USE.ToString();
-                                d.Caller = node.OriginName;
-                                d.Callee = callee.OriginName;
+                                d.Caller = node;
+                                d.Callee = callee;
                                 dependencies.Add(d);
                             }
                         }
@@ -382,8 +372,8 @@ namespace CSharpCIA.CSharpCIA.API
                             {
                                 Dependency d = new Dependency();
                                 d.Type = DEPENDENCY_TYPE.INVOKE.ToString();
-                                d.Caller = node.OriginName;
-                                d.Callee = callee.OriginName;
+                                d.Caller = node;
+                                d.Callee = callee;
                                 dependencies.Add(d);
                             }
                         }
@@ -422,8 +412,8 @@ namespace CSharpCIA.CSharpCIA.API
                         {
                             Dependency dependency = new Dependency();
                             dependency.Type = DEPENDENCY_TYPE.INHERIT.ToString();
-                            dependency.Caller = node.OriginName;
-                            dependency.Callee = baseClass.OriginName;
+                            dependency.Caller = node;
+                            dependency.Callee = baseClass;
                             dependencies.Add(dependency);
                         }
                     }
@@ -465,8 +455,8 @@ namespace CSharpCIA.CSharpCIA.API
                         {
                             Dependency dependency = new Dependency();
                             dependency.Type = DEPENDENCY_TYPE.IMPLEMENT.ToString();
-                            dependency.Caller = node.OriginName;
-                            dependency.Callee = interfaceNode.OriginName;
+                            dependency.Caller = node;
+                            dependency.Callee = interfaceNode;
                             dependencies.Add(dependency);
                         }
                     }
@@ -552,8 +542,8 @@ namespace CSharpCIA.CSharpCIA.API
                             {
                                 Dependency dependency = new Dependency();
                                 dependency.Type = DEPENDENCY_TYPE.OVERRIDE.ToString();
-                                dependency.Caller = methodNode.OriginName;
-                                dependency.Callee = superMethodNode.OriginName;
+                                dependency.Caller = methodNode;
+                                dependency.Callee = superMethodNode;
                                 dependencies.Add(dependency);
                             }
                         }
@@ -567,8 +557,8 @@ namespace CSharpCIA.CSharpCIA.API
                                 {
                                     Dependency dependency = new Dependency();
                                     dependency.Type = DEPENDENCY_TYPE.OVERRIDE.ToString();
-                                    dependency.Caller = methodNode.OriginName;
-                                    dependency.Callee = item.OriginName;
+                                    dependency.Caller = methodNode;
+                                    dependency.Callee = item;
                                     dependencies.Add(dependency);
                                 }
                             }
@@ -580,8 +570,8 @@ namespace CSharpCIA.CSharpCIA.API
                                 {
                                     Dependency dependency = new Dependency();
                                     dependency.Type = DEPENDENCY_TYPE.OVERRIDE.ToString();
-                                    dependency.Caller = methodNode.OriginName;
-                                    dependency.Callee = item.OriginName;
+                                    dependency.Caller = methodNode;
+                                    dependency.Callee = item;
                                     dependencies.Add(dependency);
                                 }
                             }
@@ -623,8 +613,8 @@ namespace CSharpCIA.CSharpCIA.API
                         {
                             Dependency dependency = new Dependency();
                             dependency.Type = DEPENDENCY_TYPE.CALLBACK.ToString();
-                            dependency.Caller = node.OriginName;
-                            dependency.Callee = delegateNode.OriginName;
+                            dependency.Caller = node;
+                            dependency.Callee = delegateNode;
                             dependencies.Add(dependency);
                         }
                     }
@@ -663,8 +653,8 @@ namespace CSharpCIA.CSharpCIA.API
                 {
                     Dependency dependency = new Dependency();
                     dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
-                    dependency.Caller = node.OriginName;
-                    dependency.Callee = item.OriginName;
+                    dependency.Caller = node;
+                    dependency.Callee = item;
                     dependencies.Add(dependency);
                 }
             }
@@ -674,8 +664,8 @@ namespace CSharpCIA.CSharpCIA.API
             {
                 Dependency dependency = new Dependency();
                 dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
-                dependency.Caller = "Root";
-                dependency.Callee = node.OriginName;
+                dependency.Caller = root;
+                dependency.Callee = node;
                 dependencies.Add(dependency);
             }
 

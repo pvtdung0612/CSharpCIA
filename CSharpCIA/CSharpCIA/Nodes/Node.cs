@@ -20,7 +20,6 @@ namespace CSharpCIA.CSharpCIA.Nodes
         protected string sourcePath; // Ex: Directory/Class
         protected SyntaxTree syntaxTree; // For get tree of the file and find path binding
         protected SyntaxNode syntaxNode; // For get syntaxNode from roslyn 
-        protected List<Dependency> dependencies;
 
         protected Node(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode)
         {
@@ -31,7 +30,6 @@ namespace CSharpCIA.CSharpCIA.Nodes
             this.SourcePath = sourcePath;
             this.SyntaxTree = syntaxTree;
             this.SyntaxNode = syntaxNode;
-            this.Dependencies = new List<Dependency>();
         }
 
         public abstract string Type { get; }
@@ -86,11 +84,23 @@ namespace CSharpCIA.CSharpCIA.Nodes
         public SyntaxTree SyntaxTree { get => syntaxTree; set => syntaxTree = value; }
         [JsonIgnore]
         public SyntaxNode SyntaxNode { get => syntaxNode; set => syntaxNode = value; }
-        public List<Dependency> Dependencies { get => dependencies; set => dependencies = value; }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is not null && obj is Node)
+            {
+                Node node = obj as Node;
+                if (node.Id.Equals(this.Id))
+                    return true;
+                else
+                    return false;
+            } else
+                return false;
+        }
 
         public override string ToString()
         {
-            return bindingName;
+            return simpleName + "-" + Id.ToString();
         }
     }
 }

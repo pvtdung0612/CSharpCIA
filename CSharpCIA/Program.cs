@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis;
 using CSharpCIA.CSharpCIA.Nodes.Builders;
+using System.Diagnostics;
 
 //string filePath = "E:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\DataTest\\test2.cs";
 //string filePath = "E:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\DataTest2\\Test5";
@@ -18,9 +19,9 @@ Parser parser = new Parser();
 Tuple<List<Dependency>, RootNode> result = parser.Parse(filePath);
 #region Print List Node
 RootNode root = result.Item2 as RootNode;
-
 Console.WriteLine("------------------------------------------------------------------");
-Console.WriteLine($"root:\nId:{root.Id} SimpleName:{root.SimpleName} Type:{root.Type} SourcePath:{root.SourcePath}");
+Console.WriteLine($"\n\n\nCount Node: {root.childrens.Count + 1}");
+Console.WriteLine($"\nroot:\nId:{root.Id} SimpleName:{root.SimpleName} Type:{root.Type} SourcePath:{root.SourcePath}");
 foreach (var item in root.childrens)
 {
     //Console.WriteLine($"node:\nId:{item.Id} SimpleName:{item.SimpleName} OriginName:{item.OriginName} Type:{item.Type} SourcePath:{item.SourcePath}");
@@ -40,9 +41,15 @@ foreach (var item in dependencies)
 }
 #endregion
 
-#region ExportTreeToJson
-JsonTree jsonTree= new JsonTree();
-JsonTree.ExportTreeToJson(root, "‪C:\\Users\\dung3\\Desktop\\Temp\\ExportToJson.json");
+#region Use CIAExtension
+//FindNodeById
+Console.WriteLine("\n\nFind Node by Id");
+Console.WriteLine(CIAExtension.FindNodeById(root, root.childrens.First<Node>().Id).OriginName);
+Console.WriteLine($"Default value: {default(Node) is null}.");
+
+// ExportDependencyToJson
+CIAExtension.ExportDependencyToJson(dependencies);
+CIAExtension.ExportRootToJson(root);
 #endregion
 
 //// Learn about Roslyn
