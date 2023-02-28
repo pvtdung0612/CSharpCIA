@@ -29,4 +29,11 @@ namespace CSharpCIA.CSharpCIA.Builders
         ENUM,
         DELEGATE,
     }
+    public enum CHANGE_TYPE
+    {
+        NONE,
+        ADD,
+        REMOVE,
+        MODIFIED,
+    }
 }

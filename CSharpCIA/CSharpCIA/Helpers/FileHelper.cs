@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -65,6 +66,22 @@ namespace CSharpCIA.CSharpCIA.Helpers
             }
 
             return files;
+        }
+
+        public static bool ExportObjectToJson(object obj, string filepath = "C:\\Users\\dung3\\Desktop\\Temp\\ExportObjectToJson.json")
+        {
+            try
+            {
+                string json = JsonConvert.SerializeObject(obj);
+
+                // Lưu chuỗi JSON vào file
+                File.WriteAllText(filepath, json);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            return true;
         }
     }
 }
