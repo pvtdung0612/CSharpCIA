@@ -14,9 +14,10 @@ namespace CSharpCIA.CSharpCIA.API
         {
             Dictionary<string, string> result = new Dictionary<string, string>();
 
+            // 3864: otimize performance increase - memory decrease
             // Convert listNode1 to hashSet1 for increase program performance
-            Dictionary<string, Node> diction1 = new Dictionary<string, Node>();
-            Dictionary<string, Node> diction2 = new Dictionary<string, Node>();
+            Dictionary<string, Node> diction1 = new Dictionary<string, Node>(); // <BindingName, Node>
+            Dictionary<string, Node> diction2 = new Dictionary<string, Node>(); // <BindingName, Node>
             // O(n)
             foreach (Node node in listNodeVer1)
                 diction1.Add(node.BindingName, node);

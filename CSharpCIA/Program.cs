@@ -30,7 +30,7 @@ Console.WriteLine($"\nroot:\nId:{root1.Id} SimpleName:{root1.SimpleName} Type:{r
 foreach (var item in root1.childrens)
 {
     //Console.WriteLine($"node:\nId:{item.Id} SimpleName:{item.SimpleName} OriginName:{item.OriginName} Type:{item.Type} SourcePath:{item.SourcePath}");
-    Console.WriteLine($"node:\n\n---OriginName:{item.OriginName}\n\nId:{item.Id} SimpleName:{item.SimpleName} Type:{item.Type} SourcePath:{item.SourcePath}");
+    Console.WriteLine($"node:\n\n---BindingName:{item.BindingName}\nId:{item.Id} \nSimpleName:{item.SimpleName} \nType:{item.Type} \nOriginName:{item.OriginName} \nSourcePath:{item.SourcePath}");
     if (item is MethodNode) Console.WriteLine($"--QualifiedName:{((MethodNode)item).QualifiedName}");
 }
 #endregion

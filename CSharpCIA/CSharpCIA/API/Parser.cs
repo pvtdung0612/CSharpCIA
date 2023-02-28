@@ -286,8 +286,8 @@ namespace CSharpCIA.CSharpCIA.API
                     dependencies.AddRange(ParseImplementDependency(child, compilation, root));
                     dependencies.AddRange(ParseOverrideDependency(child, compilation, root));
                     dependencies.AddRange(ParseCallbackDependency(child, compilation, root));
-                    dependencies.AddRange(ParseOwnDependency(child, root));
                 }
+                dependencies.AddRange(ParseOwnDependency(root));
             }
 
             return dependencies;
@@ -627,47 +627,78 @@ namespace CSharpCIA.CSharpCIA.API
         /// <param name="node">Type is all node</param>
         /// <param name="root"></param>
         /// <returns></returns>
-        private List<Dependency> ParseOwnDependency(Node node, RootNode root)
+        private List<Dependency> ParseOwnDependency(RootNode root)
         {
             var dependencies = new List<Dependency>();
 
-            // Thêm quan hệ sở hữu cho những node có cấp thấp hơn namespace
-            foreach (var item in root.childrens)
+            // Thêm quan hệ sở hữu cho namespace và những node có cấp bằng hoặc thấp hơn
+            foreach (var node in root.childrens)
             {
-                // Ex:
-                // MyApp
-                // Test10
-                // Test10//Animal
-                // Test10//Animal//Sound
+                foreach (var item in root.childrens)
+                {
+                    // Ex: item is Test10//Animal. node is Test10
+                    // MyApp
+                    // Test10
+                    // Test10//Animal
+                    // Test10//Animal//Sound
+                    // item, node also in root.childrens
 
-                string childPath = null;
-                if (node.BindingName.Length < item.BindingName.Length)
-                {
-                    childPath = item.BindingName.Remove(0, node.BindingName.Length);
-                }
-                if (childPath is not null
-                    && childPath.Count(c => c.Equals(Path.DirectorySeparatorChar)) == 1
-                    && item.BindingName.StartsWith(node.BindingName))
-                {
-                    Dependency dependency = new Dependency();
-                    dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
-                    dependency.Caller = node;
-                    dependency.Callee = item;
-                    dependencies.Add(dependency);
+                    string childPath = null;
+                    if (node.BindingName.Length < item.BindingName.Length)
+                    {
+                        childPath = item.BindingName.Remove(0, node.BindingName.Length);
+                    }
+                    if (childPath is not null
+                        && childPath.Count(c => c.Equals(Path.DirectorySeparatorChar)) == 1
+                        && item.BindingName.StartsWith(node.BindingName))
+                    {
+                        Dependency dependency = new Dependency();
+                        dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
+                        dependency.Caller = node;
+                        dependency.Callee = item;
+                        dependencies.Add(dependency);
+                    }
                 }
             }
 
             // Thêm quan hệ giữa Root và namespace
-            if (node.Type.Equals(NODE_TYPE.NAMESPACE.ToString()) && node.BindingName.Count(c => c.Equals(Path.DirectorySeparatorChar)) == 0)
+            // 3864: Otimize performance increase - memory decrease
+            // convert dependencies to Dictionary to increase program performance
+            Dictionary<Guid, Dependency> dicNamespaceCallee = new Dictionary<Guid, Dependency>(); // <Callee.Id, Dependency>
+            foreach (var item in dependencies)
             {
-                Dependency dependency = new Dependency();
-                dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
-                dependency.Caller = root;
-                dependency.Callee = node;
-                dependencies.Add(dependency);
+                if (item.Callee.Type.Equals(NODE_TYPE.NAMESPACE.ToString()))
+                {
+                    dicNamespaceCallee.Add(item.Callee.Id, item);
+                }
+            }
+
+            foreach (var item in root.childrens)
+            {
+                if (item.Type == NODE_TYPE.NAMESPACE.ToString())
+                {
+                    if (!dicNamespaceCallee.ContainsKey(item.Id))
+                    {
+                        Dependency dependency = new Dependency();
+                        dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
+                        dependency.Caller = root;
+                        dependency.Callee = item;
+                        dependencies.Add(dependency);
+                    }
+                }
             }
 
             return dependencies;
+            // 3864: History
+            //// Thêm quan hệ giữa Root và namespace
+            //if (node.Type.Equals(NODE_TYPE.NAMESPACE.ToString()) && node.BindingName.Count(c => c.Equals(Path.DirectorySeparatorChar)) == 0)
+            //{
+            //    Dependency dependency = new Dependency();
+            //    dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
+            //    dependency.Caller = root;
+            //    dependency.Callee = node;
+            //    dependencies.Add(dependency);
+            //}
         }
 
         #endregion
