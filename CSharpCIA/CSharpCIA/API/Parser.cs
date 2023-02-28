@@ -631,6 +631,7 @@ namespace CSharpCIA.CSharpCIA.API
         {
             var dependencies = new List<Dependency>();
 
+            // 3864: Optimize need optimize performance
             // Thêm quan hệ sở hữu cho namespace và những node có cấp bằng hoặc thấp hơn
             foreach (var node in root.childrens)
             {
