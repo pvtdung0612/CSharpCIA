@@ -5,8 +5,8 @@ using CSharpCIA.CSharpCIA.Nodes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis;
-using CSharpCIA.CSharpCIA.Nodes.Builders;
 using System.Diagnostics;
+using CSharpCIA.CSharpCIA.Builders;
 
 //string filePath = "E:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\DataTest\\test2.cs";
 //string filePath = "E:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\DataTest2\\Test5";
@@ -45,7 +45,6 @@ foreach (var item in dependencies)
 //FindNodeById
 Console.WriteLine("\n\nFind Node by Id");
 Console.WriteLine(CIAExtension.FindNodeById(root, root.childrens.First<Node>().Id).OriginName);
-Console.WriteLine($"Default value: {default(Node) is null}.");
 
 // ExportDependencyToJson
 CIAExtension.ExportDependencyToJson(dependencies);

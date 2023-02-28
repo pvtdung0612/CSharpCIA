@@ -1,5 +1,5 @@
-﻿using CSharpCIA.CSharpCIA.Nodes;
-using CSharpCIA.CSharpCIA.Nodes.Builders;
+﻿using CSharpCIA.CSharpCIA.Builders;
+using CSharpCIA.CSharpCIA.Nodes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json;
 using System;

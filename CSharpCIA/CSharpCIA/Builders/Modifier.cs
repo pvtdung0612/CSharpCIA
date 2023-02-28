@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CSharpCIA.CSharpCIA.Nodes.Builders
+namespace CSharpCIA.CSharpCIA.Builders
 {
     // 3864 bỏ
     public enum MODIFIERS

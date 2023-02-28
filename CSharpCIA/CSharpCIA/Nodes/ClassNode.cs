@@ -1,5 +1,4 @@
-﻿using CSharpCIA.CSharpCIA.Nodes.Builders;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Security.AccessControl;
 using Newtonsoft.Json;
+using CSharpCIA.CSharpCIA.Builders;
 
 namespace CSharpCIA.CSharpCIA.Nodes
 {

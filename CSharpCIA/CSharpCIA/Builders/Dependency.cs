@@ -1,4 +1,6 @@
-namespace CSharpCIA.CSharpCIA.Nodes.Builders
+using CSharpCIA.CSharpCIA.Nodes;
+
+namespace CSharpCIA.CSharpCIA.Builders
 {
 
     public struct Dependency
