@@ -1,4 +1,5 @@
 ﻿using CSharpCIA.CSharpCIA.Builders;
+using CSharpCIA.CSharpCIA.Helpers;
 using CSharpCIA.CSharpCIA.Nodes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json;
@@ -65,35 +66,63 @@ namespace CSharpCIA.CSharpCIA.API
             return result;
         }
 
-        public static void ExportDependencyToJson(List<Dependency> dependencies)
+        public static bool ExportDependencyToJson(List<Dependency> dependencies)
         {
-            string json = "[";
-            for (int i = 0; i < dependencies.Count; i++)
+            try
             {
-                var obj = new
+                string json = "[";
+                for (int i = 0; i < dependencies.Count; i++)
                 {
-                    dependencies[i].Type,
-                    Caller = dependencies[i].Caller.ToString(),
-                    Callee = dependencies[i].Callee.ToString()
-                };
-                json += JsonConvert.SerializeObject(obj);
-                if (i != dependencies.Count - 1)
-                {
-                    json += ",";
+                    var obj = new
+                    {
+                        dependencies[i].Type,
+                        Caller = dependencies[i].Caller.ToString(),
+                        Callee = dependencies[i].Callee.ToString()
+                    };
+                    json += JsonConvert.SerializeObject(obj);
+                    if (i != dependencies.Count - 1)
+                    {
+                        json += ",";
+                    }
                 }
-            }
-            json += "]";
+                json += "]";
 
-            // Lưu chuỗi JSON vào file
-            File.WriteAllText("C:\\Users\\dung3\\Desktop\\Temp\\ExportDependencyToJson.json", json);
+                // Lưu chuỗi JSON vào file
+                File.WriteAllText("C:\\Users\\dung3\\Desktop\\Temp\\ExportDependencyToJson.json", json);
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+            return true;
         }
 
-        public static void ExportRootToJson(RootNode root)
+        /// <summary>
+        /// Export list nodes of root to json file
+        /// </summary>
+        /// <param name="root"></param>
+        /// <returns></returns>
+        public static bool ExportRootToJson(RootNode root)
         {
-            string json = JsonConvert.SerializeObject(root);
-
-            // Lưu chuỗi JSON vào file
-            File.WriteAllText("C:\\Users\\dung3\\Desktop\\Temp\\ExportRootToJson.json", json);
+            return FileHelper.ExportObjectToJson(root, "C:\\Users\\dung3\\Desktop\\Temp\\ExportRootToJson.json");
+        }
+        /// <summary>
+        /// Export Change of ver1 and ver2 to json file
+        /// </summary>
+        /// <param name="nodeChanges">Dictionary<Node.BindingName, CHANGE_TYPE></param>
+        /// <returns></returns>
+        public static bool ExportChangeToJson(Dictionary<string, string> nodeChanges)
+        {
+            return FileHelper.ExportObjectToJson(nodeChanges, "C:\\Users\\dung3\\Desktop\\Temp\\ExportChangeToJson.json");
+        }
+        /// <summary>
+        /// Export Impact of change from ver1 and ver2 to json file
+        /// </summary>
+        /// <param name="impacts">Dictionary<Node.BindingName, ulong> </param>
+        /// <returns></returns>
+        public static bool ExportImpactToJson(Dictionary<string, ulong> impacts)
+        {
+            return FileHelper.ExportObjectToJson(impacts, "C:\\Users\\dung3\\Desktop\\Temp\\ExportImpactToJson.json");
         }
     }
 }

@@ -23,7 +23,7 @@ Tuple<List<Dependency>, RootNode> project2 = parser.Parse(filePath2);
 
 
 #region Print List Node
-RootNode root1 = project2.Item2 as RootNode;
+RootNode root1 = project1.Item2 as RootNode;
 Console.WriteLine("------------------------------------------------------------------");
 Console.WriteLine($"\n\n\nCount Node: {root1.childrens.Count + 1}");
 Console.WriteLine($"\nroot:\nId:{root1.Id} SimpleName:{root1.SimpleName} Type:{root1.Type} SourcePath:{root1.SourcePath}");
@@ -51,14 +51,17 @@ foreach (var item in dependencies1)
 Console.WriteLine("\n\nFind Node by Id");
 Console.WriteLine(CIAExtension.FindNodeById(root1, root1.childrens.First<Node>().Id).OriginName);
 
-// ExportDependencyToJson
-CIAExtension.ExportDependencyToJson(dependencies1);
-CIAExtension.ExportRootToJson(root1);
-#endregion
-
-#region Print Analyzer Change
-bool resultExportObjectToJson = FileHelper.ExportObjectToJson(AnalyzerImpact.AnalyzerChange(((RootNode)project1.Item2).childrens, ((RootNode)project2.Item2).childrens));
-Console.WriteLine($"\n\nExportObjectToJson return: {resultExportObjectToJson}");
+// Export
+// Root
+Console.WriteLine($"\n\nExportRootToJson return: {CIAExtension.ExportRootToJson(project2.Item2)}");
+// Dependency
+Console.WriteLine($"\n\nExportDependencyToJson return: {CIAExtension.ExportDependencyToJson(project2.Item1)}");
+// Change
+Dictionary<string, string> nodeChanges = AnalyzerImpact.AnalyzerChange(((RootNode)project1.Item2).childrens, ((RootNode)project2.Item2).childrens);
+Console.WriteLine($"\n\nExportChangeToJson return: {CIAExtension.ExportChangeToJson(nodeChanges)}");
+// Impact
+Dictionary<string, ulong> impactsVer2 = AnalyzerImpact.ChangeImpactAnalysis(nodeChanges, project2.Item1);
+Console.WriteLine($"\n\nExportImpactToJson return: {CIAExtension.ExportImpactToJson(impactsVer2)}");
 #endregion
 
 //// Learn about Roslyn
