@@ -84,8 +84,6 @@ namespace CSharpCIA.CSharpCIA.API
                 if (nodeChanges.ContainsKey(dependency.Callee.BindingName) 
                     && !nodeChanges[dependency.Callee.BindingName].Equals(CHANGE_TYPE.NONE.ToString()))
                 {
-                    Console.WriteLine($"\n>BindingName Caller: {dependency.Caller.BindingName}");
-                    Console.WriteLine($">BindingName Callee: {dependency.Callee.BindingName}");
                     ulong scoreImpactCaller = 0;
                     ulong scoreImpactCallee = 0;
 

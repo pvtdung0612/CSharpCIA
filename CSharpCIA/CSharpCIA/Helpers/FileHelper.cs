@@ -68,7 +68,7 @@ namespace CSharpCIA.CSharpCIA.Helpers
             return files;
         }
 
-        public static bool ExportObjectToJson(object obj, string filepath = "C:\\Users\\dung3\\Desktop\\Temp\\ExportObjectToJson.json")
+        public static bool ExportObjectToJson(object obj, string filepath = "ExportObjectToJson.json")
         {
             try
             {

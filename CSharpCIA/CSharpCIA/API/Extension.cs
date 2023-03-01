@@ -1,17 +1,11 @@
 ﻿using CSharpCIA.CSharpCIA.Builders;
 using CSharpCIA.CSharpCIA.Helpers;
 using CSharpCIA.CSharpCIA.Nodes;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CSharpCIA.CSharpCIA.API
 {
-    internal class CIAExtension
+    internal class Extension
     {
         public static Node? FindNodeById(RootNode root,Guid id)
         {
@@ -66,7 +60,12 @@ namespace CSharpCIA.CSharpCIA.API
             return result;
         }
 
-        public static bool ExportDependencyToJson(List<Dependency> dependencies)
+        /// <summary>
+        /// Export list Dependency to json file
+        /// </summary>
+        /// <param name="dependencies"></param>
+        /// <returns></returns>
+        public static bool ExportDependencyToJson(List<Dependency> dependencies, string filepath = "ExportDependencyToJson.json")
         {
             try
             {
@@ -96,13 +95,12 @@ namespace CSharpCIA.CSharpCIA.API
             }
             return true;
         }
-
         /// <summary>
         /// Export list nodes of root to json file
         /// </summary>
         /// <param name="root"></param>
         /// <returns></returns>
-        public static bool ExportRootToJson(RootNode root)
+        public static bool ExportRootToJson(RootNode root, string filepath = "ExportRootToJson.json")
         {
             return FileHelper.ExportObjectToJson(root, "C:\\Users\\dung3\\Desktop\\Temp\\ExportRootToJson.json");
         }
@@ -111,7 +109,7 @@ namespace CSharpCIA.CSharpCIA.API
         /// </summary>
         /// <param name="nodeChanges">Dictionary<Node.BindingName, CHANGE_TYPE></param>
         /// <returns></returns>
-        public static bool ExportChangeToJson(Dictionary<string, string> nodeChanges)
+        public static bool ExportChangeToJson(Dictionary<string, string> nodeChanges, string filepath = "ExportChangeToJson.json")
         {
             return FileHelper.ExportObjectToJson(nodeChanges, "C:\\Users\\dung3\\Desktop\\Temp\\ExportChangeToJson.json");
         }
@@ -120,7 +118,7 @@ namespace CSharpCIA.CSharpCIA.API
         /// </summary>
         /// <param name="impacts">Dictionary<Node.BindingName, ulong> </param>
         /// <returns></returns>
-        public static bool ExportImpactToJson(Dictionary<string, ulong> impacts)
+        public static bool ExportImpactToJson(Dictionary<string, ulong> impacts, string filepath = "ExportImpactToJson.json")
         {
             return FileHelper.ExportObjectToJson(impacts, "C:\\Users\\dung3\\Desktop\\Temp\\ExportImpactToJson.json");
         }

@@ -14,10 +14,13 @@
 		DelegateNode
 > Setup Modifiers
 > Setup Connection
-> Setup Binding Node together
-> Create API Compare two version
+> Setup Binding Node together: use BindingName
 > Make CS Tree
 > Create API Export Json file
+
+> Create API Compare two version: use IsEquivalentTo of Roslyn
+	- comment change -> version change
+	- insert a space -> version change
 
 > Add test case:
 	- test case 1 hàm gọi 2 hàm cùng tên overloading

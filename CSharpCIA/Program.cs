@@ -49,19 +49,19 @@ foreach (var item in dependencies1)
 #region Use CIAExtension
 //FindNodeById
 Console.WriteLine("\n\nFind Node by Id");
-Console.WriteLine(CIAExtension.FindNodeById(root1, root1.childrens.First<Node>().Id).OriginName);
+Console.WriteLine(Extension.FindNodeById(root1, root1.childrens.First<Node>().Id).OriginName);
 
 // Export
 // Root
-Console.WriteLine($"\n\nExportRootToJson return: {CIAExtension.ExportRootToJson(project2.Item2)}");
+Console.WriteLine($"\n\nExportRootToJson return: {Extension.ExportRootToJson(project2.Item2)}");
 // Dependency
-Console.WriteLine($"\n\nExportDependencyToJson return: {CIAExtension.ExportDependencyToJson(project2.Item1)}");
+Console.WriteLine($"\n\nExportDependencyToJson return: {Extension.ExportDependencyToJson(project2.Item1)}");
 // Change
 Dictionary<string, string> nodeChanges = AnalyzerImpact.AnalyzerChange(((RootNode)project1.Item2).childrens, ((RootNode)project2.Item2).childrens);
-Console.WriteLine($"\n\nExportChangeToJson return: {CIAExtension.ExportChangeToJson(nodeChanges)}");
+Console.WriteLine($"\n\nExportChangeToJson return: {Extension.ExportChangeToJson(nodeChanges)}");
 // Impact
 Dictionary<string, ulong> impactsVer2 = AnalyzerImpact.ChangeImpactAnalysis(nodeChanges, project2.Item1);
-Console.WriteLine($"\n\nExportImpactToJson return: {CIAExtension.ExportImpactToJson(impactsVer2)}");
+Console.WriteLine($"\n\nExportImpactToJson return: {Extension.ExportImpactToJson(impactsVer2)}");
 #endregion
 
 //// Learn about Roslyn

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using CSharpCIA.CSharpCIA.Builders;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Newtonsoft.Json;
 
 namespace CSharpCIA.CSharpCIA.Nodes
@@ -68,7 +61,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
                     // Node is Root
                     if (originName.Equals(sourcePath))
                     {
-                        bindingName = sourcePath;
+                        bindingName = "Root";
                     }
                     // Node is not Root
                     else
