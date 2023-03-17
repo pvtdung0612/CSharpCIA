@@ -1,10 +1,14 @@
 ﻿using CSharpCIA.CSharpCIA.Builders;
 using CSharpCIA.CSharpCIA.Nodes;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Xml.Linq;
 
 namespace CSharpCIA.CSharpCIA.API
 {
@@ -41,7 +45,17 @@ namespace CSharpCIA.CSharpCIA.API
                     // version 2 is have same Node in version 1:
                     // node is modified or node wasn't modified
 
-                    if (item1.SyntaxNode.IsEquivalentTo(diction2[key].SyntaxNode))
+                    // 3864: Obsolete
+                    //var visitor = new RemoveCommentsVisitor();
+                    //var declaration1 = visitor.Visit(item1.SyntaxNode);
+                    //var declaration2 = visitor.Visit(diction2[key].SyntaxNode);
+
+                    //if (declaration1.IsEquivalentTo(declaration2))
+                    //    result.Add(item1.BindingName, CHANGE_TYPE.NONE.ToString());
+                    //else
+                    //    result.Add(item1.BindingName, CHANGE_TYPE.MODIFIED.ToString());
+
+                    if (item1.isIdentical(diction2[key]))
                         result.Add(item1.BindingName, CHANGE_TYPE.NONE.ToString());
                     else
                         result.Add(item1.BindingName, CHANGE_TYPE.MODIFIED.ToString());
@@ -155,4 +169,22 @@ namespace CSharpCIA.CSharpCIA.API
              return result;
         }
     }
+
+
+    class RemoveCommentsVisitor : CSharpSyntaxRewriter
+    {
+        public override SyntaxTrivia VisitTrivia(SyntaxTrivia trivia)
+        {
+            // Loại bỏ các comment trên và trong một câu lệnh
+            if (trivia.IsKind(SyntaxKind.SingleLineCommentTrivia) ||
+                trivia.IsKind(SyntaxKind.MultiLineCommentTrivia))
+            {
+                return default(SyntaxTrivia);
+            }
+
+            // Giữ lại các trivia khác
+            return base.VisitTrivia(trivia);
+        }
+    }
+
 }

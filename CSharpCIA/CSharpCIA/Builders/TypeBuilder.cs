@@ -29,8 +29,8 @@ namespace CSharpCIA.CSharpCIA.Builders
     public enum DEPENDENCY_TYPE
     {
         INVOKE,
-        USE,
-        OWN,
+        USE, // method,
+        OWN, // root - namespace, namespace - class, class - field, property, method 
         INHERIT,
         IMPLEMENT,
         OVERRIDE,

@@ -78,6 +78,9 @@ namespace CSharpCIA.CSharpCIA.Nodes
         [JsonIgnore]
         public SyntaxNode SyntaxNode { get => syntaxNode; set => syntaxNode = value; }
 
+
+        public abstract bool isIdentical(Node node);
+
         public override bool Equals(object? obj)
         {
             if (obj is not null && obj is Node)
@@ -93,7 +96,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
 
         public override string ToString()
         {
-            return simpleName + "-" + Id.ToString();
+            return Type + "-" + bindingName;
         }
     }
 }

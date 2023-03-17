@@ -57,9 +57,14 @@ Console.WriteLine($"\n\nExportRootToJson return: {Extension.ExportRootToJson(pro
 // Dependency
 Console.WriteLine($"\n\nExportDependencyToJson return: {Extension.ExportDependencyToJson(project2.Item1)}");
 // Change
+// Change: tìm các thay đổi của ver2 so với ver1
 Dictionary<string, string> nodeChanges = AnalyzerImpact.AnalyzerChange(((RootNode)project1.Item2).childrens, ((RootNode)project2.Item2).childrens);
 Console.WriteLine($"\n\nExportChangeToJson return: {Extension.ExportChangeToJson(nodeChanges)}");
 // Impact
+// Impact: ảnh hưởng của sự thay đổi lên ver1
+//Dictionary<string, ulong> impactsVer2 = AnalyzerImpact.ChangeImpactAnalysis(nodeChanges, project1.Item1);
+//Console.WriteLine($"\n\nExportImpactToJson return: {Extension.ExportImpactToJson(impactsVer2)}");
+// Impact: ảnh hưởng của sự thay đổi lên ver2
 Dictionary<string, ulong> impactsVer2 = AnalyzerImpact.ChangeImpactAnalysis(nodeChanges, project2.Item1);
 Console.WriteLine($"\n\nExportImpactToJson return: {Extension.ExportImpactToJson(impactsVer2)}");
 #endregion

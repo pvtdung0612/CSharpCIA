@@ -104,7 +104,22 @@ namespace CSharpCIA.CSharpCIA.API
 
                     // Config new transfer Node
                     string originName = parentPath + Path.DirectorySeparatorChar + namespaceDeclarationSyntax.Name.ToString().Replace('.', Path.DirectorySeparatorChar);
-                    NamespaceNode namespaceNode = new NamespaceNode(namespaceDeclarationSyntax.Name.ToString(), namespaceDeclarationSyntax.Name.ToString(), originName, sourcePath, child.SyntaxTree, child);
+
+                    // Set Attribute
+                    List<string> attributes = new List<string>();
+                    foreach (var item in namespaceDeclarationSyntax.AttributeLists)
+                    {
+                        attributes.Add(item.ToString());
+                    }
+
+                    // Set modifiers
+                    List<string> modifiers = new List<string>();
+                    foreach (var item in namespaceDeclarationSyntax.Modifiers)
+                    {
+                        modifiers.Add(item.ToString());
+                    }
+
+                    NamespaceNode namespaceNode = new NamespaceNode(namespaceDeclarationSyntax.Name.ToString(), namespaceDeclarationSyntax.Name.ToString(), originName, sourcePath, child.SyntaxTree, child, attributes, modifiers);
 
                     // Check namespace is exits but different file
                     bool isExistNamespace = false;
@@ -133,7 +148,34 @@ namespace CSharpCIA.CSharpCIA.API
                     // Config new transfer Node
                     string originName = parentPath + Path.DirectorySeparatorChar + classDeclaration.Identifier.ToString();
 
-                    ClassNode classNode = new ClassNode(classDeclaration.Identifier.ToString(), classDeclaration.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child);
+                    // Set modifiers
+                    List<string> modifiers = new List<string>();
+                    foreach (var item in classDeclaration.Modifiers)
+                    {
+                        modifiers.Add(item.ToString());
+                    }
+
+                    // Set attributes
+                    List<string> attributes = new List<string>();
+                    foreach (var item in classDeclaration.AttributeLists)
+                    {
+                        attributes.Add(item.ToString());
+                    }
+
+                    // Set bases gồm những implemented interface và inherited class
+                    List<string> bases = new List<string>();
+                    var baseList = classDeclaration.BaseList;
+                    if (baseList != null)
+                    {
+                        foreach (var baseTypeSyntax in baseList.Types)
+                        {
+                            // Lấy ra tên của base
+                            bases.Add(baseTypeSyntax.Type.ToString());
+                        }
+                    }
+
+                    ClassNode classNode = new ClassNode(classDeclaration.Identifier.ToString(), classDeclaration.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child,
+                        attributes, modifiers, bases);
                     transferNodes.Add(classNode);
                     foreach (var item in classDeclaration.Members)
                     {
@@ -143,12 +185,33 @@ namespace CSharpCIA.CSharpCIA.API
                 else if (child is FieldDeclarationSyntax)
                 {
                     FieldDeclarationSyntax fieldDeclarationSyntax = (FieldDeclarationSyntax)child;
+
+                    // Set modifiers
+                    List<string> modifiers = new List<string>();
+                    foreach (var item in fieldDeclarationSyntax.Modifiers)
+                    {
+                        modifiers.Add(item.ToString());
+                    }
+
+                    // Set attributes
+                    List<string> attributes = new List<string>();
+                    foreach (var item in fieldDeclarationSyntax.AttributeLists)
+                    {
+                        attributes.Add(item.ToString());
+                    }
+
+                    // Set VariableType
+                    var variableType = SyntaxFactory.ParseTypeName(fieldDeclarationSyntax.Declaration.Type.ToString()).ToString();
+
                     foreach (var variable in fieldDeclarationSyntax.Declaration.Variables)
                     {
                         // Config new transfer Node
                         string originName = parentPath + Path.DirectorySeparatorChar + variable.Identifier.ToString();
 
-                        FieldNode fieldNode = new FieldNode(variable.Identifier.ToString(), variable.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child);
+                        // Set VariableValue
+                        var variableValue = variable.Initializer?.Value?.ToString();
+
+                        FieldNode fieldNode = new FieldNode(variable.Identifier.ToString(), variable.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child, attributes, modifiers, variableType, variableValue);
                         transferNodes.Add(fieldNode);
                     }
                 }
@@ -159,7 +222,21 @@ namespace CSharpCIA.CSharpCIA.API
                     // Config new transfer Node
                     string originName = parentPath + Path.DirectorySeparatorChar + propertyDeclarationSyntax.Identifier.ToString();
 
-                    PropertyNode propertyNode = new PropertyNode(propertyDeclarationSyntax.Identifier.ToString(), propertyDeclarationSyntax.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child);
+                    // Set modifiers
+                    List<string> modifiers = new List<string>();
+                    foreach (var item in propertyDeclarationSyntax.Modifiers)
+                    {
+                        modifiers.Add(item.ToString());
+                    }
+
+                    // Set attributes
+                    List<string> attributes = new List<string>();
+                    foreach (var item in propertyDeclarationSyntax.AttributeLists)
+                    {
+                        attributes.Add(item.ToString());
+                    }
+
+                    PropertyNode propertyNode = new PropertyNode(propertyDeclarationSyntax.Identifier.ToString(), propertyDeclarationSyntax.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child, attributes, modifiers);
                     transferNodes.Add(propertyNode);
                 }
                 else if (child is MethodDeclarationSyntax)
@@ -167,7 +244,7 @@ namespace CSharpCIA.CSharpCIA.API
                     MethodDeclarationSyntax methodDeclarationSyntax = (MethodDeclarationSyntax)child;
 
                     // Config new transfer Node
-                    // Make qualifiedName for MethodNode
+                    // Set Name
                     Boolean check = false;
                     string simpleName = methodDeclarationSyntax.Identifier.ToString();
                     string qualifiedName = simpleName + "(";
@@ -180,8 +257,37 @@ namespace CSharpCIA.CSharpCIA.API
                     qualifiedName += ")";
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
 
+                    // Set Attribute
+                    List<string> attributes = new List<string>();
+                    foreach (var item in methodDeclarationSyntax.AttributeLists)
+                    {
+                        attributes.Add(item.ToString());
+                    }
+
+                    // Set modifiers
+                    List<string> modifiers = new List<string>();
+                    foreach (var item in methodDeclarationSyntax.Modifiers)
+                    {
+                        modifiers.Add(item.ToString());
+                    }
+
+                    // Set parameters
+                    List<string> parametersType = new List<string>();
+                    foreach (var param in methodDeclarationSyntax.ParameterList.Parameters)
+                    {
+                        if (param.Type != null)
+                        {
+                            parametersType.Add(param.Type.ToString());
+                        }
+                    }
+
+                    // Set body
                     string body = methodDeclarationSyntax.Body is null ? null : methodDeclarationSyntax.Body.ToString();
-                    MethodNode methodNode = new MethodNode(methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, body);
+
+                    // Set return type
+                    string returnType = methodDeclarationSyntax.ReturnType is null ? null : methodDeclarationSyntax.ReturnType.ToString();
+
+                    MethodNode methodNode = new MethodNode(methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child,attributes, modifiers, parametersType, body, returnType);
                     transferNodes.Add(methodNode);
                 }
                 else if (child is InterfaceDeclarationSyntax)
@@ -193,7 +299,33 @@ namespace CSharpCIA.CSharpCIA.API
                     string qualifiedName = simpleName;
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
 
-                    InterfaceNode interfaceNode = new InterfaceNode(interfaceDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
+                    // Set modifiers
+                    List<string> modifiers = new List<string>();
+                    foreach (var item in interfaceDeclarationSyntax.Modifiers)
+                    {
+                        modifiers.Add(item.ToString());
+                    }
+
+                    // Set attributes
+                    List<string> attributes = new List<string>();
+                    foreach (var item in interfaceDeclarationSyntax.AttributeLists)
+                    {
+                        attributes.Add(item.ToString());
+                    }
+
+                    // Set bases gồm những implemented interface và inherited class
+                    List<string> bases = new List<string>();
+                    var baseList = interfaceDeclarationSyntax.BaseList;
+                    if (baseList != null)
+                    {
+                        foreach (var baseTypeSyntax in baseList.Types)
+                        {
+                            // Lấy ra tên của base
+                            bases.Add(baseTypeSyntax.Type.ToString());
+                        }
+                    }
+
+                    InterfaceNode interfaceNode = new InterfaceNode(interfaceDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, attributes, modifiers, bases);
                     transferNodes.Add(interfaceNode);
                     foreach (var item in interfaceDeclarationSyntax.Members)
                     {
@@ -209,7 +341,33 @@ namespace CSharpCIA.CSharpCIA.API
                     string qualifiedName = simpleName;
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
 
-                    StructNode structNode = new StructNode(structDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
+                    // Set modifiers
+                    List<string> modifiers = new List<string>();
+                    foreach (var item in structDeclarationSyntax.Modifiers)
+                    {
+                        modifiers.Add(item.ToString());
+                    }
+
+                    // Set attributes
+                    List<string> attributes = new List<string>();
+                    foreach (var item in structDeclarationSyntax.AttributeLists)
+                    {
+                        attributes.Add(item.ToString());
+                    }
+
+                    // Set bases gồm những implemented interface và inherited struct
+                    List<string> bases = new List<string>();
+                    var baseList = structDeclarationSyntax.BaseList;
+                    if (baseList != null)
+                    {
+                        foreach (var baseTypeSyntax in baseList.Types)
+                        {
+                            // Lấy ra tên của base
+                            bases.Add(baseTypeSyntax.Type.ToString());
+                        }
+                    }
+
+                    StructNode structNode = new StructNode(structDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, attributes, modifiers, bases);
                     transferNodes.Add(structNode);
                 }
                 else if (child is EnumDeclarationSyntax)
@@ -221,7 +379,33 @@ namespace CSharpCIA.CSharpCIA.API
                     string qualifiedName = simpleName;
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
 
-                    EnumNode enumNode = new EnumNode(enumDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
+                    // Set modifiers
+                    List<string> modifiers = new List<string>();
+                    foreach (var item in enumDeclarationSyntax.Modifiers)
+                    {
+                        modifiers.Add(item.ToString());
+                    }
+
+                    // Set attributes
+                    List<string> attributes = new List<string>();
+                    foreach (var item in enumDeclarationSyntax.AttributeLists)
+                    {
+                        attributes.Add(item.ToString());
+                    }
+
+                    // Set bases gồm những implemented interface và inherited enum
+                    List<string> bases = new List<string>();
+                    var baseList = enumDeclarationSyntax.BaseList;
+                    if (baseList != null)
+                    {
+                        foreach (var baseTypeSyntax in baseList.Types)
+                        {
+                            // Lấy ra tên của base
+                            bases.Add(baseTypeSyntax.Type.ToString());
+                        }
+                    }
+
+                    EnumNode enumNode = new EnumNode(enumDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, attributes, modifiers, bases);
                     transferNodes.Add(enumNode);
                 }
                 else if (child is DelegateDeclarationSyntax)
@@ -233,7 +417,21 @@ namespace CSharpCIA.CSharpCIA.API
                     string qualifiedName = simpleName;
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
 
-                    DelegateNode delegateNode = new DelegateNode(delegateDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child);
+                    // Set modifiers
+                    List<string> modifiers = new List<string>();
+                    foreach (var item in delegateDeclarationSyntax.Modifiers)
+                    {
+                        modifiers.Add(item.ToString());
+                    }
+
+                    // Set attributes
+                    List<string> attributes = new List<string>();
+                    foreach (var item in delegateDeclarationSyntax.AttributeLists)
+                    {
+                        attributes.Add(item.ToString());
+                    }
+
+                    DelegateNode delegateNode = new DelegateNode(delegateDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, attributes, modifiers);
                     transferNodes.Add(delegateNode);
                 }
 
