@@ -531,8 +531,8 @@ namespace CSharpCIA.CSharpCIA.API
                             {
                                 Dependency d = new Dependency();
                                 d.Type = DEPENDENCY_TYPE.USE.ToString();
-                                d.Caller = node;
-                                d.Callee = callee;
+                                d.Caller = node.Id;
+                                d.Callee = callee.Id;
                                 dependencies.Add(d);
                             }
                         }
@@ -575,8 +575,8 @@ namespace CSharpCIA.CSharpCIA.API
                             {
                                 Dependency d = new Dependency();
                                 d.Type = DEPENDENCY_TYPE.INVOKE.ToString();
-                                d.Caller = node;
-                                d.Callee = callee;
+                                d.Caller = node.Id;
+                                d.Callee = callee.Id;
                                 dependencies.Add(d);
                             }
                         }
@@ -615,8 +615,8 @@ namespace CSharpCIA.CSharpCIA.API
                         {
                             Dependency dependency = new Dependency();
                             dependency.Type = DEPENDENCY_TYPE.INHERIT.ToString();
-                            dependency.Caller = node;
-                            dependency.Callee = baseClass;
+                            dependency.Caller = node.Id;
+                            dependency.Callee = baseClass.Id;
                             dependencies.Add(dependency);
                         }
                     }
@@ -658,8 +658,8 @@ namespace CSharpCIA.CSharpCIA.API
                         {
                             Dependency dependency = new Dependency();
                             dependency.Type = DEPENDENCY_TYPE.IMPLEMENT.ToString();
-                            dependency.Caller = node;
-                            dependency.Callee = interfaceNode;
+                            dependency.Caller = node.Id;
+                            dependency.Callee = interfaceNode.Id;
                             dependencies.Add(dependency);
                         }
                     }
@@ -745,8 +745,8 @@ namespace CSharpCIA.CSharpCIA.API
                             {
                                 Dependency dependency = new Dependency();
                                 dependency.Type = DEPENDENCY_TYPE.OVERRIDE.ToString();
-                                dependency.Caller = methodNode;
-                                dependency.Callee = superMethodNode;
+                                dependency.Caller = methodNode.Id;
+                                dependency.Callee = superMethodNode.Id;
                                 dependencies.Add(dependency);
                             }
                         }
@@ -760,8 +760,8 @@ namespace CSharpCIA.CSharpCIA.API
                                 {
                                     Dependency dependency = new Dependency();
                                     dependency.Type = DEPENDENCY_TYPE.OVERRIDE.ToString();
-                                    dependency.Caller = methodNode;
-                                    dependency.Callee = item;
+                                    dependency.Caller = methodNode.Id;
+                                    dependency.Callee = item.Id;
                                     dependencies.Add(dependency);
                                 }
                             }
@@ -773,8 +773,8 @@ namespace CSharpCIA.CSharpCIA.API
                                 {
                                     Dependency dependency = new Dependency();
                                     dependency.Type = DEPENDENCY_TYPE.OVERRIDE.ToString();
-                                    dependency.Caller = methodNode;
-                                    dependency.Callee = item;
+                                    dependency.Caller = methodNode.Id;
+                                    dependency.Callee = item.Id;
                                     dependencies.Add(dependency);
                                 }
                             }
@@ -816,8 +816,8 @@ namespace CSharpCIA.CSharpCIA.API
                         {
                             Dependency dependency = new Dependency();
                             dependency.Type = DEPENDENCY_TYPE.CALLBACK.ToString();
-                            dependency.Caller = node;
-                            dependency.Callee = delegateNode;
+                            dependency.Caller = node.Id;
+                            dependency.Callee = delegateNode.Id;
                             dependencies.Add(dependency);
                         }
                     }
@@ -860,8 +860,8 @@ namespace CSharpCIA.CSharpCIA.API
                     {
                         Dependency dependency = new Dependency();
                         dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
-                        dependency.Caller = node;
-                        dependency.Callee = item;
+                        dependency.Caller = node.Id;
+                        dependency.Callee = item.Id;
                         dependencies.Add(dependency);
                     }
                 }
@@ -879,12 +879,13 @@ namespace CSharpCIA.CSharpCIA.API
             if (root is not null)
             {
                 // convert dependencies to Dictionary to increase program performance
-                Dictionary<Guid, Dependency> dicNamespaceCallee = new Dictionary<Guid, Dependency>(); // <Callee.Id, Dependency>
+                Dictionary<string, Dependency> dicNamespaceCallee = new Dictionary<string, Dependency>(); // <Callee.Id, Dependency>
+                Dictionary<string, Node> dicTransferedNodes = tranferedNodes.ToDictionary(keySelector: n => n.Id, elementSelector: n => n);
                 foreach (var item in dependencies)
                 {
-                    if (item.Callee.Type.Equals(NODE_TYPE.NAMESPACE.ToString()))
+                    if (dicTransferedNodes.ContainsKey(item.Callee) && dicTransferedNodes[item.Callee].Type.Equals(NODE_TYPE.NAMESPACE.ToString()))
                     {
-                        dicNamespaceCallee.Add(item.Callee.Id, item);
+                        dicNamespaceCallee.Add(dicTransferedNodes[item.Callee].Id, item);
                     }
                 }
 
@@ -896,8 +897,8 @@ namespace CSharpCIA.CSharpCIA.API
                         {
                             Dependency dependency = new Dependency();
                             dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
-                            dependency.Caller = root;
-                            dependency.Callee = item;
+                            dependency.Caller = root.Id;
+                            dependency.Callee = item.Id;
                             dependencies.Add(dependency);
                         }
                     }

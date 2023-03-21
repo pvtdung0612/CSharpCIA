@@ -1,22 +1,29 @@
 ﻿using Microsoft.CodeAnalysis;
 using Newtonsoft.Json;
+using System.Net;
 
 namespace CSharpCIA.CSharpCIA.Nodes
 {
     public abstract class Node
     {
-        protected Guid id;
-        protected string simpleName; // Ex: MethodName
-        protected string qualifiedName; // Ex: MethodName(int, int)
-        protected string originName; // Ex: Directory/File.cs/Namespace/Class/Method(int, int)
-        protected string bindingName; // For binding Node, equal: originName remove sourcePath, Ex: Namespace/Class/Method(int, int) 
-        protected string sourcePath; // Ex: Directory/Class
-        protected SyntaxTree syntaxTree; // For get tree of the file and find path binding
-        protected SyntaxNode syntaxNode; // For get syntaxNode from roslyn 
+        private string id;
+        private ulong impact;
+        private string simpleName; // Ex: MethodName
+        private string qualifiedName; // Ex: MethodName(int, int)
+        private string originName; // Ex: Directory/File.cs/Namespace/Class/Method(int, int)
+        private string bindingName; // For binding Node, equal: originName remove sourcePath, Ex: Namespace/Class/Method(int, int) 
+        private string sourcePath; // Ex: Directory/Class
+        private SyntaxTree syntaxTree; // For get tree of the file and find path binding
+        private SyntaxNode syntaxNode; // For get syntaxNode from roslyn 
 
-        protected Node(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode)
+        protected Node(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode, string id = null)
         {
-            this.id = Guid.NewGuid();
+            if (String.IsNullOrEmpty(id)) {
+                this.id = Guid.NewGuid().ToString();
+            } else
+            {
+                this.id = id;
+            }
             this.SimpleName = simpleName;
             this.QualifiedName = qualifiedName;
             this.OriginName = originName;
@@ -26,7 +33,8 @@ namespace CSharpCIA.CSharpCIA.Nodes
         }
 
         public abstract string Type { get; }
-        public Guid Id { get => id; }
+        public string Id { get => id; }
+        public ulong Impact { get => impact; set => impact = value; }
         public string SimpleName { get => simpleName; set => simpleName = value; }
         public string QualifiedName { get => qualifiedName; set => qualifiedName = value; }
         public string OriginName
@@ -77,7 +85,6 @@ namespace CSharpCIA.CSharpCIA.Nodes
         public SyntaxTree SyntaxTree { get => syntaxTree; set => syntaxTree = value; }
         [JsonIgnore]
         public SyntaxNode SyntaxNode { get => syntaxNode; set => syntaxNode = value; }
-
 
         public abstract bool isIdentical(Node node);
 

@@ -17,11 +17,10 @@ namespace CSharpCIA.CSharpCIA.Nodes
         private string? body;
         private string returnType;
 
-        public MethodNode(string simpleName, string qualifiedName, string originName, string sourcePath,
-            SyntaxTree syntaxTree, SyntaxNode syntaxNode,
+        public MethodNode(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode,
             List<string> attributes, List<string> modifiers,
-            List<string> parameters, string? body, string returnType)
-            : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
+            List<string> parameters, string? body, string returnType, string id = null)
+            : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode, id)
         {
             Body = body;
             Parameters = parameters;

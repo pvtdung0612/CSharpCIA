@@ -77,9 +77,9 @@ namespace CSharpCIA.CSharpCIA.Helpers
                 // Lưu chuỗi JSON vào file
                 File.WriteAllText(filepath, json);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return false;
+                throw e;
             }
             return true;
         }

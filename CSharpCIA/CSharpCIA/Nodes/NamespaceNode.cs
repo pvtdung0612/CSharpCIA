@@ -18,7 +18,8 @@ namespace CSharpCIA.CSharpCIA.Nodes
         private List<string>? modifiers;
 
         public NamespaceNode(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode
-            , List<string>? attributes, List<string>? modifiers) : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
+            , List<string>? attributes, List<string>? modifiers, string id = null) 
+            : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode, id)
         {
             AllOriginNames = new List<string> { originName };
             AllSourcePaths = new List<string> { sourcePath };

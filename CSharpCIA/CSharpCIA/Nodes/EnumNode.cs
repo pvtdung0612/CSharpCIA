@@ -16,8 +16,8 @@ namespace CSharpCIA.CSharpCIA.Nodes
         private List<string>? bases;
 
         public EnumNode(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode
-, List<string>? attributes, List<string>? modifiers, List<string>? bases)
-            : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
+, List<string>? attributes, List<string>? modifiers, List<string>? bases, string id = null)
+            : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode, id)
         {
             Attributes = attributes;
             Modifiers = modifiers;

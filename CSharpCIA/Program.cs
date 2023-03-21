@@ -44,27 +44,39 @@ foreach (var item in project1.Item2)
 }
 #endregion
 
-#region Use CIAExtension
+#region Use CIAExtension Export
 ////FindNodeById
 //Console.WriteLine("\n\nFind Node by Id");
 //Console.WriteLine(Extension.FindNodeById(root1, ((List<Node>) project1.Item2).First<Node>().Id).OriginName);
 
 // Export
-// Root
-Console.WriteLine($"\n\nExportNodesToJson return: {Extension.ExportNodesToJson(project2.Item1)}");
 // Dependency
-Console.WriteLine($"\n\nExportDependencyToJson return: {Extension.ExportDependencyToJson(project2.Item2)}");
+Console.WriteLine($"\nExportDependencyToJson return: {Extension.ExportDependencyToJson(project2.Item2, "D:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\ResultDataTest\\Test11\\ExportDependencyToJson.json")}");
 // Change
 // Change: tìm các thay đổi của ver2 so với ver1
 Dictionary<string, string> nodeChanges = AnalyzerImpact.AnalyzerChange(project1.Item1, project2.Item1);
-Console.WriteLine($"\n\nExportChangeToJson return: {Extension.ExportChangeToJson(nodeChanges)}");
+Console.WriteLine($"\nExportChangeToJson return: {Extension.ExportChangeToJson(nodeChanges, "D:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\ResultDataTest\\Test11\\ExportChangeToJson.json")}");
 // Impact
 // Impact: ảnh hưởng của sự thay đổi lên ver1
 //Dictionary<string, ulong> impactsVer2 = AnalyzerImpact.ChangeImpactAnalysis(nodeChanges, project1.Item1);
 //Console.WriteLine($"\n\nExportImpactToJson return: {Extension.ExportImpactToJson(impactsVer2)}");
 // Impact: ảnh hưởng của sự thay đổi lên ver2
-Dictionary<string, ulong> impactsVer2 = AnalyzerImpact.ChangeImpactAnalysis(nodeChanges, project2.Item2);
-Console.WriteLine($"\n\nExportImpactToJson return: {Extension.ExportImpactToJson(impactsVer2)}");
+Dictionary<string, ulong> impactsVer2 = AnalyzerImpact.ChangeImpactAnalysis(project2.Item1, nodeChanges, project2.Item2);
+Console.WriteLine($"\nExportImpactToJson return: {Extension.ExportImpactToJson(impactsVer2, "D:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\ResultDataTest\\Test11\\ExportImpactToJson.json")}");
+
+// Nodes
+Console.WriteLine($"\nExportNodesToJson return: {Extension.ExportNodesToJson(project2.Item1, "D:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\ResultDataTest\\Test11\\ExportNodesToJson.json")}");
+#endregion
+
+#region Use CIAExtension Import 
+var importNodes = Extension.ImportNodesFromJson("D:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\ResultDataTest\\Test11\\ExportNodesToJson.json");
+var check = Extension.ExportNodesToJson(importNodes, "D:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\ResultDataTest\\Test11\\TestImport\\Nodes.json");
+
+Console.WriteLine($"\nExport Node from import: {check}");
+
+var importDependencies = Extension.ImportDependencyFromJson("D:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\ResultDataTest\\Test11\\ExportDependencyToJson.json");
+check = Extension.ExportDependencyToJson(importDependencies, "D:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\ResultDataTest\\Test11\\TestImport\\Dependency.json");
+Console.WriteLine($"\nExport dependency from import: {check}");
 #endregion
 
 //// Learn about Roslyn

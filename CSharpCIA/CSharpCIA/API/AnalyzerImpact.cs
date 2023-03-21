@@ -86,17 +86,20 @@ namespace CSharpCIA.CSharpCIA.API
         /// <param name="nodeChanges">Dictionary<Node.BindingName, CHANGE_TYPE></param>
         /// <param name="dependencies">List<Dependency> of nodeChanges in a version (may be version 1 or version 2)</param>
         /// <returns>Dictionary<Node.BindingName, Impact score> is result of ChangeImpactAnalysis</returns>
-        public static Dictionary<string, ulong> ChangeImpactAnalysis(Dictionary<string, string> nodeChanges, List<Dependency> dependencies)
+        public static Dictionary<string, ulong> ChangeImpactAnalysis(List<Node> nodes, Dictionary<string, string> nodeChanges, List<Dependency> dependencies)
         {
             // Dictionary<Node.BindingName, Impact score>
             Dictionary<string, ulong> result = new Dictionary<string, ulong>();
+
+            // Convert list to dictionary to increase performance
+            Dictionary<string, Node> dicNodes = nodes.ToDictionary(keySelector: n => n.Id, elementSelector: n => n);
             
             // những thằng node nào vừa có sự thay đổi vừa có sự phụ thuộc từ thằng khác gọi đến thì tính là có ảnh hưởng
             foreach (var dependency in dependencies)
             {
                 // Những đứa node nào gọi đến node hiện tại thì bị ảnh hưởng
-                if (nodeChanges.ContainsKey(dependency.Callee.BindingName) 
-                    && !nodeChanges[dependency.Callee.BindingName].Equals(CHANGE_TYPE.NONE.ToString()))
+                if (dicNodes.ContainsKey(dependency.Callee) && nodeChanges.ContainsKey(dicNodes[dependency.Callee].BindingName) 
+                    && !nodeChanges[dicNodes[dependency.Callee].BindingName].Equals(CHANGE_TYPE.NONE.ToString()))
                 {
                     ulong scoreImpactCaller = 0;
                     ulong scoreImpactCallee = 0;
@@ -139,30 +142,47 @@ namespace CSharpCIA.CSharpCIA.API
                     }
 
                     // Set điểm số ảnh hưởng cho 2 thằng dựa vào kiểu dữ liệu của 2 thằng
-                    if (nodeChanges[dependency.Callee.BindingName].Equals(CHANGE_TYPE.ADDED.ToString()))
+                    if (nodeChanges[dicNodes[dependency.Callee].BindingName].Equals(CHANGE_TYPE.ADDED.ToString()))
                     {
                         scoreImpactCaller += IMPACT_WEIGHT.CHANGE_ADDED;
                         scoreImpactCallee += IMPACT_WEIGHT.CHANGE_ADDED;
                     }
-                    if (nodeChanges[dependency.Callee.BindingName].Equals(CHANGE_TYPE.REMOVED.ToString()))
+                    if (nodeChanges[dicNodes[dependency.Callee].BindingName].Equals(CHANGE_TYPE.REMOVED.ToString()))
                     {
                         scoreImpactCaller += IMPACT_WEIGHT.CHANGE_REMOVED;
                         scoreImpactCallee += IMPACT_WEIGHT.CHANGE_REMOVED;
                     }
-                    if (nodeChanges[dependency.Callee.BindingName].Equals(CHANGE_TYPE.MODIFIED.ToString()))
+                    if (nodeChanges[dicNodes[dependency.Callee].BindingName].Equals(CHANGE_TYPE.MODIFIED.ToString()))
                     {
                         scoreImpactCaller += IMPACT_WEIGHT.CHANGE_MODIFIED;
                         scoreImpactCallee += IMPACT_WEIGHT.CHANGE_MODIFIED;
                     }
 
-                    if (result.ContainsKey(dependency.Caller.BindingName))
-                        result[dependency.Caller.BindingName] += scoreImpactCaller;
+                    if (result.ContainsKey(dicNodes[dependency.Caller].BindingName))
+                    {
+                        result[dicNodes[dependency.Caller].BindingName] += scoreImpactCaller;
+                    }
                     else
-                        result.Add(dependency.Caller.BindingName, scoreImpactCaller);
-                    if (result.ContainsKey(dependency.Callee.BindingName))
-                        result[dependency.Callee.BindingName] += scoreImpactCallee;
+                    {
+                        result.Add(dicNodes[dependency.Caller].BindingName, scoreImpactCaller);
+                    }
+                    if (result.ContainsKey(dicNodes[dependency.Callee].BindingName))
+                    {
+                        result[dicNodes[dependency.Callee].BindingName] += scoreImpactCallee;
+                    }
                     else
-                        result.Add(dependency.Callee.BindingName, scoreImpactCallee);
+                    {
+                        result.Add(dicNodes[dependency.Callee].BindingName, scoreImpactCallee);
+                    }
+                }
+            }
+
+            // Set property impact for node in list nodes
+            foreach (var node in nodes)
+            {
+                if (result.ContainsKey(node.BindingName))
+                {
+                    node.Impact = result[node.BindingName];
                 }
             }
 

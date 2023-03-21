@@ -17,7 +17,8 @@ namespace CSharpCIA.CSharpCIA.Nodes
         private string? variableValue;
 
         public FieldNode(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode,
-            List<string>? attributes, List<string> modifiers, string variableType, string? variableValue) : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
+            List<string>? attributes, List<string> modifiers, string variableType, string? variableValue, string id = null) 
+            : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode, id)
         {
             Attributes = attributes;
             VariableType = variableType;

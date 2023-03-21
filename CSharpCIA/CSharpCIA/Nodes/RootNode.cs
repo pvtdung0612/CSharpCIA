@@ -20,8 +20,8 @@ namespace CSharpCIA.CSharpCIA.Nodes
         [JsonIgnore]
         public List<SyntaxTree> trees;
 
-        public RootNode(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode
-            ) : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode)
+        public RootNode(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode, string id = null) 
+            : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode, id)
         {
             this.childrens = new List<Node>();
             this.trees = new List<SyntaxTree>();
