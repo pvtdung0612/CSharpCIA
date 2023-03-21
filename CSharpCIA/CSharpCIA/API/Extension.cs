@@ -19,6 +19,16 @@ namespace CSharpCIA.CSharpCIA.API
             }
         }
 
+        public static bool ExportJsonToGexf(List<Node> nodes, List<Dependency> dependencies) {
+            try {
+                
+            } catch (Exception e) {
+                return false;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -100,9 +110,9 @@ namespace CSharpCIA.CSharpCIA.API
         /// </summary>
         /// <param name="root"></param>
         /// <returns></returns>
-        public static bool ExportRootToJson(RootNode root, string filepath = "ExportRootToJson.json")
+        public static bool ExportNodesToJson(List<Node> nodes, string filepath = "ExportRootToJson.json")
         {
-            return FileHelper.ExportObjectToJson(root, "C:\\Users\\dung3\\Desktop\\Temp\\ExportRootToJson.json");
+            return FileHelper.ExportObjectToJson(nodes, "C:\\Users\\dung3\\Desktop\\Temp\\ExportNodesToJson.json");
         }
         /// <summary>
         /// Export Change of ver1 and ver2 to json file

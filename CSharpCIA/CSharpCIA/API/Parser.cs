@@ -25,14 +25,19 @@ namespace CSharpCIA.CSharpCIA.API
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public Tuple<List<Dependency>, RootNode> Parse(string path)
+        public Tuple<List<Node>, List<Dependency>> Parse(string path)
         {
             // Parse Node
-            RootNode root = ParseNode(path);
+            List<Node> tranferedNodes = ParseNode(path);
+            RootNode root = null;
+            foreach (var item in tranferedNodes)
+            {
+                if (item.Type.Equals(NODE_TYPE.ROOT.ToString()))
+                    root = (RootNode)item;
+            }
 
             // Parse Dependency
             List<Dependency> dependencies = null;
-
             if (root is not null)
             {
                 var compilation = CSharpCompilation.Create("compiler")
@@ -48,11 +53,11 @@ namespace CSharpCIA.CSharpCIA.API
                 foreach (var tree in root.trees)
                     compilation = compilation.AddSyntaxTrees(tree);
 
-                dependencies = ParseDependency(root, compilation);
+                dependencies = ParseDependency(tranferedNodes, compilation);
             }
 
             // Return
-            Tuple<List<Dependency>, RootNode> tuple = Tuple.Create(dependencies, root);
+            Tuple<List<Node>, List<Dependency>> tuple = Tuple.Create(tranferedNodes, dependencies);
             return tuple;
         }
 
@@ -62,9 +67,11 @@ namespace CSharpCIA.CSharpCIA.API
         /// </summary>
         /// <param name="path">Path is Directory Path or File Path of Root</param>
         /// <returns>Root</returns>
-        public RootNode ParseNode(string path)
+        public List<Node> ParseNode(string path)
         {
+            List<Node> tranferedNodes = new List<Node>();
             RootNode root = new RootNode("Root", "Root", path, path, null, null);
+            tranferedNodes.Add(root);
 
             foreach (var filePath in FileHelper.GetSourceFiles(path))
             {
@@ -80,11 +87,11 @@ namespace CSharpCIA.CSharpCIA.API
                     // Get Childrens
                     foreach (var item in compilationUnitSyntax.Members)
                     {
-                        ParseNode(root.childrens, item, filePath, filePath);
+                        ParseNode(tranferedNodes, item, filePath, filePath);
                     }
                 }
             }
-            return root;
+            return tranferedNodes;
         }
 
         /// <summary>
@@ -469,23 +476,23 @@ namespace CSharpCIA.CSharpCIA.API
         /// <param name="root"></param>
         /// <param name="compilation"></param>
         /// <returns></returns>
-        public List<Dependency> ParseDependency(RootNode root, CSharpCompilation compilation)
+        public List<Dependency> ParseDependency(List<Node> tranferedNodes, CSharpCompilation compilation)
         {
             List<Dependency> dependencies = new List<Dependency>();
 
-            if (root is not null && compilation is not null)
+            if (tranferedNodes is not null && compilation is not null)
             {
                 // Parse all dependency
-                foreach (Node child in root.childrens)
+                foreach (Node child in tranferedNodes)
                 {
-                    dependencies.AddRange(ParseUseDependency(child, compilation, root));
-                    dependencies.AddRange(ParseInvokeDependency(child, compilation, root));
-                    dependencies.AddRange(ParseInheritDependency(child, compilation, root));
-                    dependencies.AddRange(ParseImplementDependency(child, compilation, root));
-                    dependencies.AddRange(ParseOverrideDependency(child, compilation, root));
-                    dependencies.AddRange(ParseCallbackDependency(child, compilation, root));
+                    dependencies.AddRange(ParseUseDependency(child, compilation, tranferedNodes));
+                    dependencies.AddRange(ParseInvokeDependency(child, compilation, tranferedNodes));
+                    dependencies.AddRange(ParseInheritDependency(child, compilation, tranferedNodes));
+                    dependencies.AddRange(ParseImplementDependency(child, compilation, tranferedNodes));
+                    dependencies.AddRange(ParseOverrideDependency(child, compilation, tranferedNodes));
+                    dependencies.AddRange(ParseCallbackDependency(child, compilation, tranferedNodes));
                 }
-                dependencies.AddRange(ParseOwnDependency(root));
+                dependencies.AddRange(ParseOwnDependency(tranferedNodes));
             }
 
             return dependencies;
@@ -498,7 +505,7 @@ namespace CSharpCIA.CSharpCIA.API
         /// <param name="compilation"></param>
         /// <param name="root"></param>
         /// <returns></returns>
-        private List<Dependency> ParseUseDependency(Node node, CSharpCompilation compilation, RootNode root)
+        private List<Dependency> ParseUseDependency(Node node, CSharpCompilation compilation, List<Node> tranferedNodes)
         {
             var dependencies = new List<Dependency>();
             if (!node.Type.Equals(NODE_TYPE.METHOD.ToString()))
@@ -515,7 +522,7 @@ namespace CSharpCIA.CSharpCIA.API
                     var symbol = model.GetSymbolInfo(statement).Symbol;
                     if (symbol is not null)
                     {
-                        var callees = root.childrens.FindAll(node =>
+                        var callees = tranferedNodes.FindAll(node =>
                                    node.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
                         foreach (var callee in callees)
@@ -542,7 +549,7 @@ namespace CSharpCIA.CSharpCIA.API
         /// <param name="compilation"></param>
         /// <param name="root"></param>
         /// <returns></returns>
-        private List<Dependency> ParseInvokeDependency(Node node, CSharpCompilation compilation, RootNode root)
+        private List<Dependency> ParseInvokeDependency(Node node, CSharpCompilation compilation, List<Node> tranferedNodes)
         {
             var dependencies = new List<Dependency>();
             if (!node.Type.Equals(NODE_TYPE.METHOD.ToString()))
@@ -559,7 +566,7 @@ namespace CSharpCIA.CSharpCIA.API
                     var symbol = model.GetSymbolInfo(statement).Symbol;
                     if (symbol is not null)
                     {
-                        var callees = root.childrens.FindAll(node =>
+                        var callees = tranferedNodes.FindAll(node =>
                                    node.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
                         foreach (var callee in callees)
@@ -586,14 +593,14 @@ namespace CSharpCIA.CSharpCIA.API
         /// <param name="compilation"></param>
         /// <param name="root"></param>
         /// <returns></returns>
-        private List<Dependency> ParseInheritDependency(Node node, CSharpCompilation compilation, RootNode root)
+        private List<Dependency> ParseInheritDependency(Node node, CSharpCompilation compilation, List<Node> tranferedNodes)
         {
             var dependencies = new List<Dependency>();
             if (!node.Type.Equals(NODE_TYPE.CLASS.ToString()))
                 return dependencies;
             SemanticModel model = compilation.GetSemanticModel(node.SyntaxTree);
 
-            if (node is not null && model is not null && root is not null)
+            if (node is not null && model is not null && tranferedNodes is not null)
             {
                 var namedTypeSymbol = model.GetDeclaredSymbol(node.SyntaxNode);
                 var symbol = namedTypeSymbol is null ? null : (INamedTypeSymbol)namedTypeSymbol;
@@ -601,7 +608,7 @@ namespace CSharpCIA.CSharpCIA.API
                 {
                     if (symbol.BaseType is not null)
                     {
-                        List<Node> baseClasses = root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.CLASS.ToString())
+                        List<Node> baseClasses = tranferedNodes.FindAll(node => node.Type.Equals(NODE_TYPE.CLASS.ToString())
                         && node.BindingName.Equals(symbol.BaseType.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
                         foreach (var baseClass in baseClasses)
@@ -625,14 +632,14 @@ namespace CSharpCIA.CSharpCIA.API
         /// <param name="compilation"></param>
         /// <param name="root"></param>
         /// <returns></returns>
-        private List<Dependency> ParseImplementDependency(Node node, CSharpCompilation compilation, RootNode root)
+        private List<Dependency> ParseImplementDependency(Node node, CSharpCompilation compilation, List<Node> tranferedNodes)
         {
             var dependencies = new List<Dependency>();
             if (!node.Type.Equals(NODE_TYPE.CLASS.ToString()) && !node.Type.Equals(NODE_TYPE.INTERFACE.ToString()) && !node.Type.Equals(NODE_TYPE.STRUCT))
                 return dependencies;
             SemanticModel model = compilation.GetSemanticModel(node.SyntaxTree);
 
-            if (node is not null && model is not null && root is not null)
+            if (node is not null && model is not null && tranferedNodes is not null)
             {
                 var namedTypeSymbol = model.GetDeclaredSymbol(node.SyntaxNode);
                 var symbol = namedTypeSymbol is null ? null : (INamedTypeSymbol)namedTypeSymbol;
@@ -643,7 +650,7 @@ namespace CSharpCIA.CSharpCIA.API
 
                     foreach (var interfaceDirect in interfaceDirectes)
                     {
-                        var interfaceNodes = root.childrens.FindAll(node =>
+                        var interfaceNodes = tranferedNodes.FindAll(node =>
                            node.Type.Equals(NODE_TYPE.INTERFACE.ToString())
                            && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
@@ -668,21 +675,21 @@ namespace CSharpCIA.CSharpCIA.API
         /// <param name="compilation"></param>
         /// <param name="root"></param>
         /// <returns></returns>
-        private List<Dependency> ParseOverrideDependency(Node node, CSharpCompilation compilation, RootNode root)
+        private List<Dependency> ParseOverrideDependency(Node node, CSharpCompilation compilation, List<Node> tranferedNodes)
         {
             var dependencies = new List<Dependency>(); 
             if (!node.Type.Equals(NODE_TYPE.CLASS.ToString()) && !node.Type.Equals(NODE_TYPE.STRUCT))
                 return dependencies;
             SemanticModel model = compilation.GetSemanticModel(node.SyntaxTree);
 
-            if (node is not null && model is not null && root is not null)
+            if (node is not null && model is not null && tranferedNodes is not null)
             {
                 var namedTypeSymbol = model.GetDeclaredSymbol(node.SyntaxNode);
                 var symbol = namedTypeSymbol is null ? null : (INamedTypeSymbol)namedTypeSymbol;
                 if (symbol is not null)
                 {
                     // PREPARE
-                    var methodOfNode = root.childrens.FindAll(item =>
+                    var methodOfNode = tranferedNodes.FindAll(item =>
                     item.Type.Equals(NODE_TYPE.METHOD.ToString()) && item.BindingName.Remove(item.BindingName.Length - item.QualifiedName.Length - 1)
                     .Equals(node.BindingName)); // Get method in node
 
@@ -697,12 +704,12 @@ namespace CSharpCIA.CSharpCIA.API
                     foreach (var interfaceDirect in interfaceDirectes)
                     {
                         // Get internal interfaces in root, ignore external interfaces 
-                        var interfaceNodes = root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.INTERFACE.ToString())
+                        var interfaceNodes = tranferedNodes.FindAll(node => node.Type.Equals(NODE_TYPE.INTERFACE.ToString())
                             && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
                         foreach (var interfaceNode in interfaceNodes)
                         {
-                            methodDirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD.ToString())
+                            methodDirectNodes.AddRange(tranferedNodes.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD.ToString())
                             && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
                             .Equals(interfaceNode.BindingName)));
 
@@ -713,12 +720,12 @@ namespace CSharpCIA.CSharpCIA.API
                     foreach (var interfaceIndirect in interfaceIndirectes)
                     {
                         // Get internal interfaces in root, ignore external interfaces 
-                        var interfaceNodes = root.childrens.FindAll(node =>node.Type.Equals(NODE_TYPE.INTERFACE.ToString())
+                        var interfaceNodes = tranferedNodes.FindAll(node =>node.Type.Equals(NODE_TYPE.INTERFACE.ToString())
                             && node.BindingName.Equals(interfaceIndirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
                         foreach (var interfaceNode in interfaceNodes)
                         {
-                            methodIndirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD.ToString())
+                            methodIndirectNodes.AddRange(tranferedNodes.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD.ToString())
                             && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
                             .Equals(interfaceNode.BindingName)));
                         }
@@ -732,7 +739,7 @@ namespace CSharpCIA.CSharpCIA.API
 
                         if (node.Type.Equals(NODE_TYPE.CLASS.ToString()) && iMethodSymbol != null && iMethodSymbol.IsOverride)
                         {
-                            var superMethodNodes = root.childrens.FindAll(n => n.BindingName.Equals(iMethodSymbol.OverriddenMethod.ToString().Replace('.', Path.DirectorySeparatorChar)));
+                            var superMethodNodes = tranferedNodes.FindAll(n => n.BindingName.Equals(iMethodSymbol.OverriddenMethod.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
                             foreach (var superMethodNode in superMethodNodes)
                             {
@@ -785,7 +792,7 @@ namespace CSharpCIA.CSharpCIA.API
         /// <param name="compilation"></param>
         /// <param name="root"></param>
         /// <returns></returns>
-        private List<Dependency> ParseCallbackDependency(Node node, CSharpCompilation compilation, RootNode root)
+        private List<Dependency> ParseCallbackDependency(Node node, CSharpCompilation compilation, List<Node> tranferedNodes)
         {
             var dependencies = new List<Dependency>();
             if (!node.Type.Equals(NODE_TYPE.METHOD.ToString()))
@@ -802,7 +809,7 @@ namespace CSharpCIA.CSharpCIA.API
                     var symbol = model.GetDeclaredSymbol(parameterSyntax);
                     if (symbol is not null)
                     {
-                        var delegateNodes = root.childrens.FindAll(n => n.Type.Equals(NODE_TYPE.DELEGATE)
+                        var delegateNodes = tranferedNodes.FindAll(n => n.Type.Equals(NODE_TYPE.DELEGATE)
                         && n.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
                         foreach (var delegateNode in delegateNodes)
@@ -825,22 +832,22 @@ namespace CSharpCIA.CSharpCIA.API
         /// <param name="node">Type is all node</param>
         /// <param name="root"></param>
         /// <returns></returns>
-        private List<Dependency> ParseOwnDependency(RootNode root)
+        private List<Dependency> ParseOwnDependency(List<Node> tranferedNodes)
         {
             var dependencies = new List<Dependency>();
 
             // 3864: Optimize need optimize performance
             // Thêm quan hệ sở hữu cho namespace và những node có cấp bằng hoặc thấp hơn
-            foreach (var node in root.childrens)
+            foreach (var node in tranferedNodes)
             {
-                foreach (var item in root.childrens)
+                foreach (var item in tranferedNodes)
                 {
                     // Ex: item is Test10//Animal. node is Test10
                     // MyApp
                     // Test10
                     // Test10//Animal
                     // Test10//Animal//Sound
-                    // item, node also in root.childrens
+                    // item, node also in tranferedNodes
 
                     string childPath = null;
                     if (node.BindingName.Length < item.BindingName.Length)
@@ -862,27 +869,37 @@ namespace CSharpCIA.CSharpCIA.API
 
             // Thêm quan hệ giữa Root và namespace
             // 3864: Otimize performance increase - memory decrease
-            // convert dependencies to Dictionary to increase program performance
-            Dictionary<Guid, Dependency> dicNamespaceCallee = new Dictionary<Guid, Dependency>(); // <Callee.Id, Dependency>
-            foreach (var item in dependencies)
+            // Get Root
+            RootNode root = null;
+            foreach (var item in tranferedNodes)
             {
-                if (item.Callee.Type.Equals(NODE_TYPE.NAMESPACE.ToString()))
-                {
-                    dicNamespaceCallee.Add(item.Callee.Id, item);
-                }
+                if (item.Type.Equals(NODE_TYPE.ROOT.ToString()))
+                    root = (RootNode)item;
             }
-
-            foreach (var item in root.childrens)
+            if (root is not null)
             {
-                if (item.Type == NODE_TYPE.NAMESPACE.ToString())
+                // convert dependencies to Dictionary to increase program performance
+                Dictionary<Guid, Dependency> dicNamespaceCallee = new Dictionary<Guid, Dependency>(); // <Callee.Id, Dependency>
+                foreach (var item in dependencies)
                 {
-                    if (!dicNamespaceCallee.ContainsKey(item.Id))
+                    if (item.Callee.Type.Equals(NODE_TYPE.NAMESPACE.ToString()))
                     {
-                        Dependency dependency = new Dependency();
-                        dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
-                        dependency.Caller = root;
-                        dependency.Callee = item;
-                        dependencies.Add(dependency);
+                        dicNamespaceCallee.Add(item.Callee.Id, item);
+                    }
+                }
+
+                foreach (var item in tranferedNodes)
+                {
+                    if (item.Type == NODE_TYPE.NAMESPACE.ToString())
+                    {
+                        if (!dicNamespaceCallee.ContainsKey(item.Id))
+                        {
+                            Dependency dependency = new Dependency();
+                            dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
+                            dependency.Caller = root;
+                            dependency.Callee = item;
+                            dependencies.Add(dependency);
+                        }
                     }
                 }
             }
@@ -925,7 +942,7 @@ namespace CSharpCIA.CSharpCIA.API
         //            var symbol = model.GetSymbolInfo(statement).Symbol;
         //            if (symbol is not null)
         //            {
-        //                var callees = root.childrens.FindAll(node =>
+        //                var callees = tranferedNodes.FindAll(node =>
         //                           node.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
         //                foreach (var callee in callees)
@@ -972,7 +989,7 @@ namespace CSharpCIA.CSharpCIA.API
 
         //            //foreach (var interfaceDirect in interfaceDirectes)
         //            //{
-        //            //    var interfaceDirectNodes = root.childrens.FindAll(node =>
+        //            //    var interfaceDirectNodes = tranferedNodes.FindAll(node =>
         //            //       node.Type.Equals(NODE_TYPE.INTERFACE.ToString())
         //            //       && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
@@ -1006,7 +1023,7 @@ namespace CSharpCIA.CSharpCIA.API
         //            //// INHERIT
         //            //if (symbol.BaseType is not null)
         //            //{
-        //            //    List<Node> baseClasses = root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.CLASS.ToString())
+        //            //    List<Node> baseClasses = tranferedNodes.FindAll(node => node.Type.Equals(NODE_TYPE.CLASS.ToString())
         //            //    && node.BindingName.Equals(symbol.BaseType.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
         //            //    foreach (var baseClass in baseClasses)
@@ -1023,7 +1040,7 @@ namespace CSharpCIA.CSharpCIA.API
         //            var interfaceDirectes = symbol.Interfaces; // get list interface relative direct with classNode
         //            //foreach (var interfaceDirect in interfaceDirectes)
         //            //{
-        //            //    var interfaceNodes = root.childrens.FindAll(node =>
+        //            //    var interfaceNodes = tranferedNodes.FindAll(node =>
         //            //       node.Type.Equals(NODE_TYPE.INTERFACE.ToString())
         //            //       && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
@@ -1039,7 +1056,7 @@ namespace CSharpCIA.CSharpCIA.API
 
         //            // OVERRIDE
         //            // Get method in classNode
-        //            var methodOfClass = root.childrens.FindAll(node =>
+        //            var methodOfClass = tranferedNodes.FindAll(node =>
         //            node.Type.Equals(NODE_TYPE.METHOD.ToString())
         //            && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
         //            .Equals(classNode.BindingName));
@@ -1054,21 +1071,21 @@ namespace CSharpCIA.CSharpCIA.API
         //            {
         //                //  // 3864 debug
         //                //  interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar);
-        //                //  var test1 = root.childrens.FindAll(node =>
+        //                //  var test1 = tranferedNodes.FindAll(node =>
         //                //node.Type.Equals(NODE_TYPE.INTERFACE.ToString()));
         //                // test git
         //                // test git 2
         //                // test git 3
 
-        //                var interfaceNodes = root.childrens.FindAll(node =>
+        //                var interfaceNodes = tranferedNodes.FindAll(node =>
         //              node.Type.Equals(NODE_TYPE.INTERFACE.ToString())
         //              && node.BindingName.Equals(interfaceDirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
         //                foreach (var interfaceNode in interfaceNodes)
         //                {
-        //                    var debug1 = root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD.ToString()));
+        //                    var debug1 = tranferedNodes.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD.ToString()));
 
-        //                    methodDirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD.ToString())
+        //                    methodDirectNodes.AddRange(tranferedNodes.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD.ToString())
         //                    && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
         //                    .Equals(interfaceNode.BindingName)));
 
@@ -1078,13 +1095,13 @@ namespace CSharpCIA.CSharpCIA.API
         //            // Get method in interface indirect
         //            foreach (var interfaceIndirect in interfaceIndirectes)
         //            {
-        //                var interfaceNodes = root.childrens.FindAll(node =>
+        //                var interfaceNodes = tranferedNodes.FindAll(node =>
         //              node.Type.Equals(NODE_TYPE.INTERFACE.ToString())
         //              && node.BindingName.Equals(interfaceIndirect.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
         //                foreach (var interfaceNode in interfaceNodes)
         //                {
-        //                    methodIndirectNodes.AddRange(root.childrens.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD.ToString())
+        //                    methodIndirectNodes.AddRange(tranferedNodes.FindAll(node => node.Type.Equals(NODE_TYPE.METHOD.ToString())
         //                    && node.BindingName.Remove(node.BindingName.Length - node.QualifiedName.Length - 1)
         //                    .Equals(interfaceNode.BindingName)));
         //                }
