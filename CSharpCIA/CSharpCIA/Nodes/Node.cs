@@ -13,14 +13,17 @@ namespace CSharpCIA.CSharpCIA.Nodes
         private string originName; // Ex: Directory/File.cs/Namespace/Class/Method(int, int)
         private string bindingName; // For binding Node, equal: originName remove sourcePath, Ex: Namespace/Class/Method(int, int) 
         private string sourcePath; // Ex: Directory/Class
+        private string syntax; // Ex: public int Student() { return 0;}
         private SyntaxTree syntaxTree; // For get tree of the file and find path binding
-        private SyntaxNode syntaxNode; // For get syntaxNode from roslyn 
+        private SyntaxNode syntaxNode; // For get syntaxNode from roslyn
 
-        protected Node(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode, string id = null)
+        protected Node(string simpleName, string qualifiedName, string originName, string sourcePath, string syntax, SyntaxTree syntaxTree, SyntaxNode syntaxNode, string id = "")
         {
-            if (String.IsNullOrEmpty(id)) {
+            if (String.IsNullOrEmpty(id))
+            {
                 this.id = Guid.NewGuid().ToString();
-            } else
+            }
+            else
             {
                 this.id = id;
             }
@@ -30,6 +33,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
             this.SourcePath = sourcePath;
             this.SyntaxTree = syntaxTree;
             this.SyntaxNode = syntaxNode;
+            this.Syntax = syntax;
         }
 
         public abstract string Type { get; }
@@ -80,6 +84,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
             }
         }
         public string BindingName { get => bindingName; }
+        public string Syntax { get => syntax; set => syntax = value; }
 
         [JsonIgnore]
         public SyntaxTree SyntaxTree { get => syntaxTree; set => syntaxTree = value; }

@@ -15,15 +15,13 @@ namespace CSharpCIA.CSharpCIA.Nodes
 
         public override string Type => NODE_TYPE.ROOT.ToString();
 
-        public List<Node> childrens;
-
         [JsonIgnore]
         public List<SyntaxTree> trees;
 
-        public RootNode(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode, string id = null) 
-            : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode, id)
+        public RootNode(string simpleName, string qualifiedName, string originName, string sourcePath, string syntax,
+            SyntaxTree syntaxTree, SyntaxNode syntaxNode, string id = "") 
+            : base(simpleName, qualifiedName, originName, sourcePath, syntax, syntaxTree, syntaxNode, id)
         {
-            this.childrens = new List<Node>();
             this.trees = new List<SyntaxTree>();
         }
 

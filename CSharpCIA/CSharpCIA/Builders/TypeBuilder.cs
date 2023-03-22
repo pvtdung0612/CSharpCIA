@@ -30,7 +30,7 @@ namespace CSharpCIA.CSharpCIA.Builders
     {
         INVOKE,
         USE, // method,
-        OWN, // root - namespace, namespace - class, class - field, property, method 
+        CONTAIN, // root - namespace, namespace - class, class - field, property, method 
         INHERIT,
         IMPLEMENT,
         OVERRIDE,

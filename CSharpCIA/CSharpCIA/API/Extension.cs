@@ -6,13 +6,14 @@ using System.IO;
 using Gexf;
 using Newtonsoft.Json.Linq;
 using System.Xml.Linq;
-
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CSharpCIA.CSharpCIA.API
 {
     internal class Extension
     {
-        public static Node? FindNodeById(List<Node> nodes,Guid id)
+        public static Node? FindNodeById(List<Node> nodes, string id)
         {
             if (nodes is not null)
             {
@@ -188,7 +189,7 @@ namespace CSharpCIA.CSharpCIA.API
             }
             catch (Exception e)
             {
-                return null;
+                Console.WriteLine(e.Message);
             }
 
             return nodes;
@@ -222,57 +223,399 @@ namespace CSharpCIA.CSharpCIA.API
             }
             catch (Exception e)
             {
-                return null;
+                Console.WriteLine(e.Message);
             }
 
             return dependencies;
         }
 
-        public static bool ExportJsonToGexf(string jsonFileName, string gexfFileName) {
-            try {
-                //// Định nghĩa các thuộc tính cho nút
-                //GexfNode node = graph.AddNode("node1", "Node 1");
-                //node.SetAttribute("size", "10");
-                //node.SetAttribute("color", "#FF0000");
+        public static bool ExportJsonToGexf(string jsonNodeFilePath, string jsonEdgeFilePath, string gexfFilePath)
+        {
+            try
+            {
+                // Create a new GEXF document
+                var gexf = new GexfDocument();
+                gexf.Meta.LastModified = DateTimeOffset.Now;
+                gexf.Meta.Creator = "DungUET[" + Environment.UserName + "]";
+                gexf.Meta.Description = "CSharpCIA";
 
-                //// Định nghĩa các thuộc tính cho cạnh
-                //GexfEdge edge = graph.AddEdge("node1", "node2");
-                //edge.SetAttribute("weight", "2");
-                //edge.SetAttribute("color", "#0000FF");
+                gexf.Graph.IdType = GexfIdType.String;
 
+                // Add node to gexf
+                // Set type Node
+                gexf.Graph.NodeAttributes.AddRange(
+                    // Node
+                    new GexfAttribute(0, "Type", GexfDataType.String),
+                    new GexfAttribute(1, "Impact", GexfDataType.String),
+                    new GexfAttribute(2, "SimpleName", GexfDataType.String),
+                    new GexfAttribute(3, "QualifiedName", GexfDataType.String),
+                    new GexfAttribute(4, "OriginName", GexfDataType.String),
+                    new GexfAttribute(5, "BindingName", GexfDataType.String),
+                    new GexfAttribute(6, "SourcePath", GexfDataType.String),
 
-                //// Load JSON file as a JObject
-                //JObject jsonData = JObject.Parse(File.ReadAllText(jsonFileName));
+                    // All Node except Root
+                    new GexfAttribute(7, "Attributes", GexfDataType.ListString),
+                    new GexfAttribute(8, "Modifiers", GexfDataType.ListString),
 
-                //// Create a new GEXF document
-                //GexfGraph gexfGraph = new GexfGraph();
-                //gexfGraph.Meta.LastModifiedDate = DateTime.Now;
-                //gexfGraph.Meta.Creator = "Your Name";
-                //gexfGraph.Meta.Description = "Your description";
+                    // Interface, Class, Enum, Struct
+                    new GexfAttribute(9, "Bases", GexfDataType.ListString),
 
-                //// Add nodes to the GEXF document
-                //foreach (JToken node in jsonData["nodes"])
-                //{
-                //    GexfNode gexfNode = gexfGraph.AddNode(node["id"].ToString());
-                //    gexfNode.Label = node["label"].ToString();
-                //}
+                    // Method
+                    new GexfAttribute(10, "Parameters", GexfDataType.ListString),
+                    new GexfAttribute(11, "Body", GexfDataType.String),
+                    new GexfAttribute(12, "ReturnType", GexfDataType.String),
 
-                //// Add edges to the GEXF document
-                //foreach (JToken edge in jsonData["edges"])
-                //{
-                //    GexfNode sourceNode = gexfGraph.GetNode(edge["source"].ToString());
-                //    GexfNode targetNode = gexfGraph.GetNode(edge["target"].ToString());
-                //    GexfEdge gexfEdge = sourceNode.ConnectTo(targetNode);
-                //    gexfEdge.Id = edge["id"].ToString();
-                //}
+                    // Namespace
+                    new GexfAttribute(13, "AllOriginNames", GexfDataType.ListString),
+                    new GexfAttribute(14, "AllSourcePaths", GexfDataType.ListString),
 
-                //// Save the GEXF document to a file
-                //using (FileStream stream = new FileStream(gexfFileName, FileMode.Create))
-                //{
-                //    gexfGraph.Save(stream);
-                //}
+                    // Update new property
+                    new GexfAttribute(15, "isConstuctor", GexfDataType.Boolean),
+                    new GexfAttribute(16, "Syntax", GexfDataType.String)
+                    );
 
-            } catch (Exception e) {
+                List<Node>? nodes = ImportNodesFromJson(jsonNodeFilePath);
+                if (nodes is not null)
+                {
+                    foreach (var item in nodes)
+                    {
+                        #region 3864: remove
+                        //GexfNode gexfNode;
+                        //switch (item.Type)
+                        //{
+                        //    case nameof(NODE_TYPE.CLASS):
+                        //        ClassNode classNode = (ClassNode)item;
+                        //        gexfNode = new GexfNode(item.Id, item.SimpleName)
+                        //        {
+                        //            AttrValues = {
+                        //        new GexfAttributeValue(0, item.Type),
+                        //        new GexfAttributeValue(1, item.Impact),
+                        //        new GexfAttributeValue(2, item.SimpleName),
+                        //        new GexfAttributeValue(3, item.QualifiedName),
+                        //        new GexfAttributeValue(4, item.OriginName),
+                        //        new GexfAttributeValue(5, item.BindingName),
+                        //        new GexfAttributeValue(6, item.SourcePath),
+
+                        //            new GexfAttributeValue(7, classNode.Attributes),
+                        //            new GexfAttributeValue(8, classNode.Modifiers),
+                        //            new GexfAttributeValue(9, classNode.Bases),
+
+                        //            // "<null value>"
+                        //            new GexfAttributeValue(10, "<null value>"),
+                        //            new GexfAttributeValue(11, "<null value>"),
+                        //            new GexfAttributeValue(12, "<null value>"),
+                        //            new GexfAttributeValue(13, "<null value>"),
+                        //            new GexfAttributeValue(14, "<null value>")
+                        //    }
+                        //        };
+                        //        break;
+                        //    default:
+                        //        break;
+                        //}
+
+                        //switch (item.Type)
+                        //{
+                        //    case nameof(NODE_TYPE.CLASS):
+                        //        ClassNode classNode = (ClassNode)item;
+                        //        gexfNode.AttrValues.AddRange(
+                        //            new GexfAttributeValue(7, classNode.Attributes),
+                        //            new GexfAttributeValue(8, classNode.Modifiers),
+                        //            new GexfAttributeValue(9, classNode.Bases),
+
+                        //            // "<null value>"
+                        //            new GexfAttributeValue(10, "<null value>"),
+                        //            new GexfAttributeValue(11, "<null value>"),
+                        //            new GexfAttributeValue(12, "<null value>"),
+                        //            new GexfAttributeValue(13, "<null value>"),
+                        //            new GexfAttributeValue(14, "<null value>")
+                        //            );
+                        //        break;
+                        //    case nameof(NODE_TYPE.DELEGATE):
+                        //        DelegateNode delegateNode = (DelegateNode)item;
+                        //        gexfNode.AttrValues.AddRange(
+                        //            new GexfAttributeValue(7, delegateNode.Attributes),
+                        //            new GexfAttributeValue(8, delegateNode.Modifiers),
+
+                        //            // "<null value>"
+                        //            new GexfAttributeValue(9, "<null value>"),
+                        //            new GexfAttributeValue(10, "<null value>"),
+                        //            new GexfAttributeValue(11, "<null value>"),
+                        //            new GexfAttributeValue(12, "<null value>"),
+                        //            new GexfAttributeValue(13, "<null value>"),
+                        //            new GexfAttributeValue(14, "<null value>")
+                        //            );
+                        //        break;
+                        //    case nameof(NODE_TYPE.ENUM):
+                        //        EnumNode enumNode = (EnumNode)item;
+                        //        gexfNode.AttrValues.AddRange(
+                        //            new GexfAttributeValue(7, enumNode.Attributes),
+                        //            new GexfAttributeValue(8, enumNode.Modifiers),
+                        //            new GexfAttributeValue(9, enumNode.Bases),
+
+                        //            // "<null value>"
+                        //            new GexfAttributeValue(10, "<null value>"),
+                        //            new GexfAttributeValue(11, "<null value>"),
+                        //            new GexfAttributeValue(12, "<null value>"),
+                        //            new GexfAttributeValue(13, "<null value>"),
+                        //            new GexfAttributeValue(14, "<null value>")
+                        //            );
+                        //        break;
+                        //    case nameof(NODE_TYPE.INTERFACE):
+                        //        InterfaceNode interfaceNode = (InterfaceNode)item;
+                        //        gexfNode.AttrValues.AddRange(
+                        //            new GexfAttributeValue(7, interfaceNode.Attributes),
+                        //            new GexfAttributeValue(8, interfaceNode.Modifiers),
+                        //            new GexfAttributeValue(9, interfaceNode.Bases),
+
+                        //            // "<null value>"
+                        //            new GexfAttributeValue(10, "<null value>"),
+                        //            new GexfAttributeValue(11, "<null value>"),
+                        //            new GexfAttributeValue(12, "<null value>"),
+                        //            new GexfAttributeValue(13, "<null value>"),
+                        //            new GexfAttributeValue(14, "<null value>")
+                        //            );
+                        //        break;
+                        //    case nameof(NODE_TYPE.METHOD):
+                        //        MethodNode methodNode = (MethodNode)item;
+                        //        gexfNode.AttrValues.AddRange(
+                        //            new GexfAttributeValue(7, methodNode.Attributes),
+                        //            new GexfAttributeValue(8, methodNode.Modifiers),
+                        //            new GexfAttributeValue(10, methodNode.Parameters),
+                        //            new GexfAttributeValue(11, methodNode.Body),
+                        //            new GexfAttributeValue(12, methodNode.ReturnType),
+
+                        //            // "<null value>"
+                        //            new GexfAttributeValue(9, "<null value>"),
+                        //            new GexfAttributeValue(13, "<null value>"),
+                        //            new GexfAttributeValue(14, "<null value>")
+
+                        //            );
+                        //        break;
+                        //    case nameof(NODE_TYPE.NAMESPACE):
+                        //        NamespaceNode namespaceNode = (NamespaceNode)item;
+                        //        gexfNode.AttrValues.AddRange(
+                        //            new GexfAttributeValue(13, namespaceNode.AllOriginNames),
+                        //            new GexfAttributeValue(14, namespaceNode.AllSourcePaths),
+                        //            new GexfAttributeValue(7, namespaceNode.Attributes),
+                        //            new GexfAttributeValue(8, namespaceNode.Modifiers),
+
+                        //            // "<null value>"
+                        //            new GexfAttributeValue(9, "<null value>"),
+                        //            new GexfAttributeValue(10, "<null value>"),
+                        //            new GexfAttributeValue(11, "<null value>"),
+                        //            new GexfAttributeValue(12, "<null value>")
+                        //            );
+                        //        break;
+                        //    case nameof(NODE_TYPE.ROOT):
+                        //        RootNode rootNode = (RootNode)item;
+                        //        gexfNode.AttrValues.AddRange(
+                        //        // "<null value>"
+                        //        new GexfAttributeValue(9, "<null value>"),
+                        //            new GexfAttributeValue(7, "<null value>"),
+                        //            new GexfAttributeValue(8, "<null value>"),
+                        //            new GexfAttributeValue(9, "<null value>"),
+                        //            new GexfAttributeValue(10, "<null value>"),
+                        //            new GexfAttributeValue(11, "<null value>"),
+                        //            new GexfAttributeValue(12, "<null value>"),
+                        //            new GexfAttributeValue(13, "<null value>"),
+                        //            new GexfAttributeValue(14, "<null value>")
+                        //            );
+                        //        break;
+                        //    case nameof(NODE_TYPE.STRUCT):
+                        //        StructNode structNode = (StructNode)item;
+                        //        gexfNode.AttrValues.AddRange(
+                        //            new GexfAttributeValue(7, structNode.Attributes),
+                        //            new GexfAttributeValue(8, structNode.Modifiers),
+                        //            new GexfAttributeValue(9, structNode.Bases),
+
+                        //            // "<null value>"
+                        //            new GexfAttributeValue(10, "<null value>"),
+                        //            new GexfAttributeValue(11, "<null value>"),
+                        //            new GexfAttributeValue(12, "<null value>"),
+                        //            new GexfAttributeValue(13, "<null value>"),
+                        //            new GexfAttributeValue(14, "<null value>")
+                        //            );
+                        //        break;
+                        //    default:
+                        //        break;
+                        //}
+                        #endregion
+
+                        // Set for comon node
+                        GexfNode gexfNode = new GexfNode(item.Id, item.SimpleName)
+                        {
+                            AttrValues = {
+                                new GexfAttributeValue(0, item.Type),
+                                new GexfAttributeValue(1, item.Impact),
+                                new GexfAttributeValue(2, item.SimpleName),
+                                new GexfAttributeValue(3, item.QualifiedName),
+                                new GexfAttributeValue(4, item.OriginName),
+                                new GexfAttributeValue(5, item.BindingName),
+                                new GexfAttributeValue(6, item.SourcePath),
+                                new GexfAttributeValue(16, item.Syntax)
+                            }
+                        };
+
+                        switch (item.Type)
+                        {
+                            case nameof(NODE_TYPE.CLASS):
+                                ClassNode classNode = (ClassNode)item;
+                                gexfNode.AttrValues.AddRange(
+                                    new GexfAttributeValue(7, classNode.Attributes),
+                                    new GexfAttributeValue(8, classNode.Modifiers),
+                                    new GexfAttributeValue(9, classNode.Bases),
+
+                                    // "<null value>"
+                                    new GexfAttributeValue(10, "<null value>"),
+                                    new GexfAttributeValue(11, "<null value>"),
+                                    new GexfAttributeValue(12, "<null value>"),
+                                    new GexfAttributeValue(13, "<null value>"),
+                                    new GexfAttributeValue(14, "<null value>")
+                                    );
+                                break;
+                            case nameof(NODE_TYPE.DELEGATE):
+                                DelegateNode delegateNode = (DelegateNode)item;
+                                gexfNode.AttrValues.AddRange(
+                                    new GexfAttributeValue(7, delegateNode.Attributes),
+                                    new GexfAttributeValue(8, delegateNode.Modifiers),
+
+                                    // "<null value>"
+                                    new GexfAttributeValue(9, "<null value>"),
+                                    new GexfAttributeValue(10, "<null value>"),
+                                    new GexfAttributeValue(11, "<null value>"),
+                                    new GexfAttributeValue(12, "<null value>"),
+                                    new GexfAttributeValue(13, "<null value>"),
+                                    new GexfAttributeValue(14, "<null value>")
+                                    );
+                                break;
+                            case nameof(NODE_TYPE.ENUM):
+                                EnumNode enumNode = (EnumNode)item;
+                                gexfNode.AttrValues.AddRange(
+                                    new GexfAttributeValue(7, enumNode.Attributes),
+                                    new GexfAttributeValue(8, enumNode.Modifiers),
+                                    new GexfAttributeValue(9, enumNode.Bases),
+
+                                    // "<null value>"
+                                    new GexfAttributeValue(10, "<null value>"),
+                                    new GexfAttributeValue(11, "<null value>"),
+                                    new GexfAttributeValue(12, "<null value>"),
+                                    new GexfAttributeValue(13, "<null value>"),
+                                    new GexfAttributeValue(14, "<null value>")
+                                    );
+                                break;
+                            case nameof(NODE_TYPE.INTERFACE):
+                                InterfaceNode interfaceNode = (InterfaceNode)item;
+                                gexfNode.AttrValues.AddRange(
+                                    new GexfAttributeValue(7, interfaceNode.Attributes),
+                                    new GexfAttributeValue(8, interfaceNode.Modifiers),
+                                    new GexfAttributeValue(9, interfaceNode.Bases),
+
+                                    // "<null value>"
+                                    new GexfAttributeValue(10, "<null value>"),
+                                    new GexfAttributeValue(11, "<null value>"),
+                                    new GexfAttributeValue(12, "<null value>"),
+                                    new GexfAttributeValue(13, "<null value>"),
+                                    new GexfAttributeValue(14, "<null value>")
+                                    );
+                                break;
+                            case nameof(NODE_TYPE.METHOD):
+                                MethodNode methodNode = (MethodNode)item;
+                                gexfNode.AttrValues.AddRange(
+                                    new GexfAttributeValue(7, methodNode.Attributes),
+                                    new GexfAttributeValue(8, methodNode.Modifiers),
+                                    new GexfAttributeValue(10, methodNode.Parameters),
+                                    new GexfAttributeValue(11, methodNode.Body),
+                                    new GexfAttributeValue(12, methodNode.ReturnType),
+                                    new GexfAttributeValue(15, methodNode.IsContructor),
+
+                                    // "<null value>"
+                                    new GexfAttributeValue(9, "<null value>"),
+                                    new GexfAttributeValue(13, "<null value>"),
+                                    new GexfAttributeValue(14, "<null value>")
+
+                                    );
+                                break;
+                            case nameof(NODE_TYPE.NAMESPACE):
+                                NamespaceNode namespaceNode = (NamespaceNode)item;
+                                gexfNode.AttrValues.AddRange(
+                                    new GexfAttributeValue(13, namespaceNode.AllOriginNames),
+                                    new GexfAttributeValue(14, namespaceNode.AllSourcePaths),
+                                    new GexfAttributeValue(7, namespaceNode.Attributes),
+                                    new GexfAttributeValue(8, namespaceNode.Modifiers),
+
+                                    // "<null value>"
+                                    new GexfAttributeValue(9, "<null value>"),
+                                    new GexfAttributeValue(10, "<null value>"),
+                                    new GexfAttributeValue(11, "<null value>"),
+                                    new GexfAttributeValue(12, "<null value>")
+                                    );
+                                break;
+                            case nameof(NODE_TYPE.ROOT):
+                                RootNode rootNode = (RootNode)item;
+                                gexfNode.AttrValues.AddRange(
+                                // "<null value>"
+                                new GexfAttributeValue(9, "<null value>"),
+                                    new GexfAttributeValue(7, "<null value>"),
+                                    new GexfAttributeValue(8, "<null value>"),
+                                    new GexfAttributeValue(9, "<null value>"),
+                                    new GexfAttributeValue(10, "<null value>"),
+                                    new GexfAttributeValue(11, "<null value>"),
+                                    new GexfAttributeValue(12, "<null value>"),
+                                    new GexfAttributeValue(13, "<null value>"),
+                                    new GexfAttributeValue(14, "<null value>")
+                                    );
+                                break;
+                            case nameof(NODE_TYPE.STRUCT):
+                                StructNode structNode = (StructNode)item;
+                                gexfNode.AttrValues.AddRange(
+                                    new GexfAttributeValue(7, structNode.Attributes),
+                                    new GexfAttributeValue(8, structNode.Modifiers),
+                                    new GexfAttributeValue(9, structNode.Bases),
+
+                                    // "<null value>"
+                                    new GexfAttributeValue(10, "<null value>"),
+                                    new GexfAttributeValue(11, "<null value>"),
+                                    new GexfAttributeValue(12, "<null value>"),
+                                    new GexfAttributeValue(13, "<null value>"),
+                                    new GexfAttributeValue(14, "<null value>"),
+                                    new GexfAttributeValue(15, "<null value>"),
+                                    new GexfAttributeValue(16, "<null value>")
+                                    );
+                                break;
+                            default:
+                                break;
+                        }
+
+                        gexf.Graph.Nodes.Add(gexfNode);
+                    }
+                }
+
+                // Add edge to gexf
+                // Set type Edge
+                gexf.Graph.EdgeAttributes.AddRange(
+                    new GexfAttribute(0, "Type", GexfDataType.String)
+                    );
+
+                List<Dependency>? dependencies = ImportDependencyFromJson(jsonEdgeFilePath);
+                if (dependencies is not null)
+                {
+                    for (int i = 0; i < dependencies.Count; i++)
+                    {
+                        GexfEdge gexfEdge = new GexfEdge(i, dependencies[i].Caller, dependencies[i].Callee)
+                        {
+                            AttrValues = {
+                                new GexfAttributeValue(0, dependencies[i].Type),
+                            }
+                        };
+                        gexf.Graph.Edges.Add(gexfEdge);
+                    }
+                }
+
+                gexf.Save(gexfFilePath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
                 return false;
             }
 

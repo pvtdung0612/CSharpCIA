@@ -70,7 +70,7 @@ namespace CSharpCIA.CSharpCIA.API
         public List<Node> ParseNode(string path)
         {
             List<Node> tranferedNodes = new List<Node>();
-            RootNode root = new RootNode("Root", "Root", path, path, null, null);
+            RootNode root = new RootNode("Root", "Root", path, path, "",  null, null);
             tranferedNodes.Add(root);
 
             foreach (var filePath in FileHelper.GetSourceFiles(path))
@@ -126,7 +126,10 @@ namespace CSharpCIA.CSharpCIA.API
                         modifiers.Add(item.ToString());
                     }
 
-                    NamespaceNode namespaceNode = new NamespaceNode(namespaceDeclarationSyntax.Name.ToString(), namespaceDeclarationSyntax.Name.ToString(), originName, sourcePath, child.SyntaxTree, child, attributes, modifiers);
+                    // Set syntax
+                    string syntax = namespaceDeclarationSyntax.ToFullString();
+
+                    NamespaceNode namespaceNode = new NamespaceNode(namespaceDeclarationSyntax.Name.ToString(), namespaceDeclarationSyntax.Name.ToString(), originName, sourcePath, syntax, child.SyntaxTree, child, attributes, modifiers);
 
                     // Check namespace is exits but different file
                     bool isExistNamespace = false;
@@ -181,7 +184,10 @@ namespace CSharpCIA.CSharpCIA.API
                         }
                     }
 
-                    ClassNode classNode = new ClassNode(classDeclaration.Identifier.ToString(), classDeclaration.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child,
+                    // Set syntax
+                    string syntax = classDeclaration.ToFullString();
+
+                    ClassNode classNode = new ClassNode(classDeclaration.Identifier.ToString(), classDeclaration.Identifier.ToString(), originName, sourcePath, syntax, child.SyntaxTree, child,
                         attributes, modifiers, bases);
                     transferNodes.Add(classNode);
                     foreach (var item in classDeclaration.Members)
@@ -210,6 +216,9 @@ namespace CSharpCIA.CSharpCIA.API
                     // Set VariableType
                     var variableType = SyntaxFactory.ParseTypeName(fieldDeclarationSyntax.Declaration.Type.ToString()).ToString();
 
+                    // Set syntax
+                    string syntax = fieldDeclarationSyntax.ToFullString();
+
                     foreach (var variable in fieldDeclarationSyntax.Declaration.Variables)
                     {
                         // Config new transfer Node
@@ -218,7 +227,7 @@ namespace CSharpCIA.CSharpCIA.API
                         // Set VariableValue
                         var variableValue = variable.Initializer?.Value?.ToString();
 
-                        FieldNode fieldNode = new FieldNode(variable.Identifier.ToString(), variable.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child, attributes, modifiers, variableType, variableValue);
+                        FieldNode fieldNode = new FieldNode(variable.Identifier.ToString(), variable.Identifier.ToString(), originName, sourcePath, syntax, child.SyntaxTree, child, attributes, modifiers, variableType, variableValue);
                         transferNodes.Add(fieldNode);
                     }
                 }
@@ -243,7 +252,10 @@ namespace CSharpCIA.CSharpCIA.API
                         attributes.Add(item.ToString());
                     }
 
-                    PropertyNode propertyNode = new PropertyNode(propertyDeclarationSyntax.Identifier.ToString(), propertyDeclarationSyntax.Identifier.ToString(), originName, sourcePath, child.SyntaxTree, child, attributes, modifiers);
+                    // Set syntax
+                    string syntax = propertyDeclarationSyntax.ToFullString();
+
+                    PropertyNode propertyNode = new PropertyNode(propertyDeclarationSyntax.Identifier.ToString(), propertyDeclarationSyntax.Identifier.ToString(), originName, sourcePath, syntax, child.SyntaxTree, child, attributes, modifiers);
                     transferNodes.Add(propertyNode);
                 }
                 else if (child is MethodDeclarationSyntax)
@@ -263,6 +275,9 @@ namespace CSharpCIA.CSharpCIA.API
                     if (check) qualifiedName = qualifiedName.Remove(qualifiedName.Length - 2);
                     qualifiedName += ")";
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
+
+                    // Set syntax
+                    string syntax = methodDeclarationSyntax.ToFullString();
 
                     // Set Attribute
                     List<string> attributes = new List<string>();
@@ -289,22 +304,79 @@ namespace CSharpCIA.CSharpCIA.API
                     }
 
                     // Set body
-                    string body = methodDeclarationSyntax.Body is null ? null : methodDeclarationSyntax.Body.ToString();
+                    string body = methodDeclarationSyntax.Body is null ? "" : methodDeclarationSyntax.Body.ToString();
 
                     // Set return type
-                    string returnType = methodDeclarationSyntax.ReturnType is null ? null : methodDeclarationSyntax.ReturnType.ToString();
+                    string returnType = methodDeclarationSyntax.ReturnType is null ? "" : methodDeclarationSyntax.ReturnType.ToString();
 
-                    MethodNode methodNode = new MethodNode(methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child,attributes, modifiers, parametersType, body, returnType);
+                    MethodNode methodNode = new MethodNode(methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, syntax, child.SyntaxTree, child,attributes, modifiers, parametersType, body, returnType, false);
+                    transferNodes.Add(methodNode);
+                }
+                else if (child is ConstructorDeclarationSyntax)
+                {
+                    ConstructorDeclarationSyntax methodDeclarationSyntax = (ConstructorDeclarationSyntax)child;
+
+                    // Config new transfer Node
+                    // Set Name
+                    Boolean check = false;
+                    string simpleName = methodDeclarationSyntax.Identifier.ToString();
+                    string qualifiedName = simpleName + "(";
+                    foreach (var param in methodDeclarationSyntax.ParameterList.Parameters)
+                    {
+                        qualifiedName += param.Type + ", ";
+                        check = true;
+                    }
+                    if (check) qualifiedName = qualifiedName.Remove(qualifiedName.Length - 2);
+                    qualifiedName += ")";
+                    string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
+
+                    // Set syntax
+                    string syntax = methodDeclarationSyntax.ToFullString();
+
+                    // Set Attribute
+                    List<string> attributes = new List<string>();
+                    foreach (var item in methodDeclarationSyntax.AttributeLists)
+                    {
+                        attributes.Add(item.ToString());
+                    }
+
+                    // Set modifiers
+                    List<string> modifiers = new List<string>();
+                    foreach (var item in methodDeclarationSyntax.Modifiers)
+                    {
+                        modifiers.Add(item.ToString());
+                    }
+
+                    // Set parameters
+                    List<string> parametersType = new List<string>();
+                    foreach (var param in methodDeclarationSyntax.ParameterList.Parameters)
+                    {
+                        if (param.Type != null)
+                        {
+                            parametersType.Add(param.Type.ToString());
+                        }
+                    }
+
+                    // Set body
+                    string body = methodDeclarationSyntax.Body is null ? "" : methodDeclarationSyntax.Body.ToString();
+
+                    // Set return type
+                    string returnType = "";
+
+                    MethodNode methodNode = new MethodNode(methodDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, syntax, child.SyntaxTree, child, attributes, modifiers, parametersType, body, returnType, true);
                     transferNodes.Add(methodNode);
                 }
                 else if (child is InterfaceDeclarationSyntax)
-                {
+                        {
                     InterfaceDeclarationSyntax interfaceDeclarationSyntax = (InterfaceDeclarationSyntax)child;
 
                     // Config new transfer Node
                     string simpleName = interfaceDeclarationSyntax.Identifier.ToString();
                     string qualifiedName = simpleName;
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
+
+                    // Set syntax
+                    string syntax = interfaceDeclarationSyntax.ToFullString();
 
                     // Set modifiers
                     List<string> modifiers = new List<string>();
@@ -332,7 +404,7 @@ namespace CSharpCIA.CSharpCIA.API
                         }
                     }
 
-                    InterfaceNode interfaceNode = new InterfaceNode(interfaceDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, attributes, modifiers, bases);
+                    InterfaceNode interfaceNode = new InterfaceNode(interfaceDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, syntax, child.SyntaxTree, child, attributes, modifiers, bases);
                     transferNodes.Add(interfaceNode);
                     foreach (var item in interfaceDeclarationSyntax.Members)
                     {
@@ -347,6 +419,9 @@ namespace CSharpCIA.CSharpCIA.API
                     string simpleName = structDeclarationSyntax.Identifier.ToString();
                     string qualifiedName = simpleName;
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
+
+                    // Set syntax
+                    string syntax = structDeclarationSyntax.ToFullString();
 
                     // Set modifiers
                     List<string> modifiers = new List<string>();
@@ -374,7 +449,7 @@ namespace CSharpCIA.CSharpCIA.API
                         }
                     }
 
-                    StructNode structNode = new StructNode(structDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, attributes, modifiers, bases);
+                    StructNode structNode = new StructNode(structDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, syntax, child.SyntaxTree, child, attributes, modifiers, bases);
                     transferNodes.Add(structNode);
                 }
                 else if (child is EnumDeclarationSyntax)
@@ -385,6 +460,9 @@ namespace CSharpCIA.CSharpCIA.API
                     string simpleName = enumDeclarationSyntax.Identifier.ToString();
                     string qualifiedName = simpleName;
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
+
+                    // Set syntax
+                    string syntax = enumDeclarationSyntax.ToFullString();
 
                     // Set modifiers
                     List<string> modifiers = new List<string>();
@@ -412,7 +490,7 @@ namespace CSharpCIA.CSharpCIA.API
                         }
                     }
 
-                    EnumNode enumNode = new EnumNode(enumDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, attributes, modifiers, bases);
+                    EnumNode enumNode = new EnumNode(enumDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, syntax, child.SyntaxTree, child, attributes, modifiers, bases);
                     transferNodes.Add(enumNode);
                 }
                 else if (child is DelegateDeclarationSyntax)
@@ -423,6 +501,9 @@ namespace CSharpCIA.CSharpCIA.API
                     string simpleName = delegateDeclarationSyntax.Identifier.ToString();
                     string qualifiedName = simpleName;
                     string originName = parentPath + Path.DirectorySeparatorChar + qualifiedName;
+
+                    // Set syntax
+                    string syntax = delegateDeclarationSyntax.ToFullString();
 
                     // Set modifiers
                     List<string> modifiers = new List<string>();
@@ -438,7 +519,7 @@ namespace CSharpCIA.CSharpCIA.API
                         attributes.Add(item.ToString());
                     }
 
-                    DelegateNode delegateNode = new DelegateNode(delegateDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, child.SyntaxTree, child, attributes, modifiers);
+                    DelegateNode delegateNode = new DelegateNode(delegateDeclarationSyntax.Identifier.ToString(), qualifiedName, originName, sourcePath, syntax, child.SyntaxTree, child, attributes, modifiers);
                     transferNodes.Add(delegateNode);
                 }
 
@@ -511,29 +592,64 @@ namespace CSharpCIA.CSharpCIA.API
             if (!node.Type.Equals(NODE_TYPE.METHOD.ToString()))
                 return dependencies;
             SemanticModel model = compilation.GetSemanticModel(node.SyntaxTree);
-            MethodDeclarationSyntax methodSyntax = (MethodDeclarationSyntax)node.SyntaxNode;
 
-            if (methodSyntax is not null && methodSyntax.Body is not null && model is not null)
+            if (node.SyntaxNode.Kind() == SyntaxKind.MethodDeclaration)
             {
-                var nameSyntax = methodSyntax.Body.DescendantNodes().OfType<IdentifierNameSyntax>();
+                MethodDeclarationSyntax methodSyntax = (MethodDeclarationSyntax)node.SyntaxNode;
 
-                foreach (var statement in nameSyntax)
+                if (methodSyntax is not null && methodSyntax.Body is not null && model is not null)
                 {
-                    var symbol = model.GetSymbolInfo(statement).Symbol;
-                    if (symbol is not null)
-                    {
-                        var callees = tranferedNodes.FindAll(node =>
-                                   node.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
+                    var nameSyntax = methodSyntax.Body.DescendantNodes().OfType<IdentifierNameSyntax>();
 
-                        foreach (var callee in callees)
+                    foreach (var statement in nameSyntax)
+                    {
+                        var symbol = model.GetSymbolInfo(statement).Symbol;
+                        if (symbol is not null)
                         {
-                            if (callee.Type.Equals(NODE_TYPE.FIELD.ToString()) || callee.Type.Equals(NODE_TYPE.PROPERTY.ToString()))
+                            var callees = tranferedNodes.FindAll(node =>
+                                       node.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                            foreach (var callee in callees)
                             {
-                                Dependency d = new Dependency();
-                                d.Type = DEPENDENCY_TYPE.USE.ToString();
-                                d.Caller = node.Id;
-                                d.Callee = callee.Id;
-                                dependencies.Add(d);
+                                if (callee.Type.Equals(NODE_TYPE.FIELD.ToString()) || callee.Type.Equals(NODE_TYPE.PROPERTY.ToString()))
+                                {
+                                    Dependency d = new Dependency();
+                                    d.Type = DEPENDENCY_TYPE.USE.ToString();
+                                    d.Caller = node.Id;
+                                    d.Callee = callee.Id;
+                                    dependencies.Add(d);
+                                }
+                            }
+                        }
+                    }
+                }
+            } 
+            else if (node.SyntaxNode.Kind() == SyntaxKind.ConstructorDeclaration)
+            {
+                ConstructorDeclarationSyntax constructorSyntax = (ConstructorDeclarationSyntax)node.SyntaxNode;
+
+                if (constructorSyntax is not null && constructorSyntax.Body is not null && model is not null)
+                {
+                    var nameSyntax = constructorSyntax.Body.DescendantNodes().OfType<IdentifierNameSyntax>();
+
+                    foreach (var statement in nameSyntax)
+                    {
+                        var symbol = model.GetSymbolInfo(statement).Symbol;
+                        if (symbol is not null)
+                        {
+                            var callees = tranferedNodes.FindAll(node =>
+                                       node.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                            foreach (var callee in callees)
+                            {
+                                if (callee.Type.Equals(NODE_TYPE.FIELD.ToString()) || callee.Type.Equals(NODE_TYPE.PROPERTY.ToString()))
+                                {
+                                    Dependency d = new Dependency();
+                                    d.Type = DEPENDENCY_TYPE.USE.ToString();
+                                    d.Caller = node.Id;
+                                    d.Callee = callee.Id;
+                                    dependencies.Add(d);
+                                }
                             }
                         }
                     }
@@ -555,29 +671,64 @@ namespace CSharpCIA.CSharpCIA.API
             if (!node.Type.Equals(NODE_TYPE.METHOD.ToString()))
                 return dependencies;
             SemanticModel model = compilation.GetSemanticModel(node.SyntaxTree);
-            MethodDeclarationSyntax methodSyntax = (MethodDeclarationSyntax)node.SyntaxNode;
 
-            if (methodSyntax is not null && methodSyntax.Body is not null && model is not null)
+            if (node.SyntaxNode.Kind() == SyntaxKind.MethodDeclaration)
             {
-                var nameSyntax = methodSyntax.Body.DescendantNodes().OfType<IdentifierNameSyntax>();
+                MethodDeclarationSyntax methodSyntax = (MethodDeclarationSyntax)node.SyntaxNode;
 
-                foreach (var statement in nameSyntax)
+                if (methodSyntax is not null && methodSyntax.Body is not null && model is not null)
                 {
-                    var symbol = model.GetSymbolInfo(statement).Symbol;
-                    if (symbol is not null)
-                    {
-                        var callees = tranferedNodes.FindAll(node =>
-                                   node.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
+                    var nameSyntax = methodSyntax.Body.DescendantNodes().OfType<IdentifierNameSyntax>();
 
-                        foreach (var callee in callees)
+                    foreach (var statement in nameSyntax)
+                    {
+                        var symbol = model.GetSymbolInfo(statement).Symbol;
+                        if (symbol is not null)
                         {
-                            if (callee.Type.Equals(NODE_TYPE.METHOD.ToString()))
+                            var callees = tranferedNodes.FindAll(node =>
+                                       node.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                            foreach (var callee in callees)
                             {
-                                Dependency d = new Dependency();
-                                d.Type = DEPENDENCY_TYPE.INVOKE.ToString();
-                                d.Caller = node.Id;
-                                d.Callee = callee.Id;
-                                dependencies.Add(d);
+                                if (callee.Type.Equals(NODE_TYPE.METHOD.ToString()))
+                                {
+                                    Dependency d = new Dependency();
+                                    d.Type = DEPENDENCY_TYPE.INVOKE.ToString();
+                                    d.Caller = node.Id;
+                                    d.Callee = callee.Id;
+                                    dependencies.Add(d);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if (node.SyntaxNode.Kind() == SyntaxKind.ConstructorDeclaration)
+            {
+                ConstructorDeclarationSyntax constructorDeclaration = (ConstructorDeclarationSyntax)node.SyntaxNode;
+
+                if (constructorDeclaration is not null && constructorDeclaration.Body is not null && model is not null)
+                {
+                    var nameSyntax = constructorDeclaration.Body.DescendantNodes().OfType<IdentifierNameSyntax>();
+
+                    foreach (var statement in nameSyntax)
+                    {
+                        var symbol = model.GetSymbolInfo(statement).Symbol;
+                        if (symbol is not null)
+                        {
+                            var callees = tranferedNodes.FindAll(node =>
+                                       node.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                            foreach (var callee in callees)
+                            {
+                                if (callee.Type.Equals(NODE_TYPE.METHOD.ToString()))
+                                {
+                                    Dependency d = new Dependency();
+                                    d.Type = DEPENDENCY_TYPE.INVOKE.ToString();
+                                    d.Caller = node.Id;
+                                    d.Callee = callee.Id;
+                                    dependencies.Add(d);
+                                }
                             }
                         }
                     }
@@ -737,7 +888,7 @@ namespace CSharpCIA.CSharpCIA.API
                         var methodSymbol = model.GetDeclaredSymbol(methodNode.SyntaxNode);
                         var iMethodSymbol = methodSymbol is null ? null : (IMethodSymbol)methodSymbol;
 
-                        if (node.Type.Equals(NODE_TYPE.CLASS.ToString()) && iMethodSymbol != null && iMethodSymbol.IsOverride)
+                        if (node.Type.Equals(NODE_TYPE.CLASS.ToString()) && iMethodSymbol is not null && iMethodSymbol.IsOverride)
                         {
                             var superMethodNodes = tranferedNodes.FindAll(n => n.BindingName.Equals(iMethodSymbol.OverriddenMethod.ToString().Replace('.', Path.DirectorySeparatorChar)));
 
@@ -798,27 +949,58 @@ namespace CSharpCIA.CSharpCIA.API
             if (!node.Type.Equals(NODE_TYPE.METHOD.ToString()))
                 return dependencies;
             SemanticModel model = compilation.GetSemanticModel(node.SyntaxTree);
-            MethodDeclarationSyntax methodSyntax = (MethodDeclarationSyntax)node.SyntaxNode;
+            
+            if (node.SyntaxNode.Kind() == SyntaxKind.MethodDeclaration) {
+                MethodDeclarationSyntax methodSyntax = (MethodDeclarationSyntax)node.SyntaxNode;
 
-            if (methodSyntax is not null && methodSyntax.ParameterList is not null && model is not null)
-            {
-                var parameterSyntaxes = methodSyntax.ParameterList.Parameters;
-
-                foreach (var parameterSyntax in parameterSyntaxes)
+                if (methodSyntax is not null && methodSyntax.ParameterList is not null && model is not null)
                 {
-                    var symbol = model.GetDeclaredSymbol(parameterSyntax);
-                    if (symbol is not null)
-                    {
-                        var delegateNodes = tranferedNodes.FindAll(n => n.Type.Equals(NODE_TYPE.DELEGATE)
-                        && n.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
+                    var parameterSyntaxes = methodSyntax.ParameterList.Parameters;
 
-                        foreach (var delegateNode in delegateNodes)
+                    foreach (var parameterSyntax in parameterSyntaxes)
+                    {
+                        var symbol = model.GetDeclaredSymbol(parameterSyntax);
+                        if (symbol is not null)
                         {
-                            Dependency dependency = new Dependency();
-                            dependency.Type = DEPENDENCY_TYPE.CALLBACK.ToString();
-                            dependency.Caller = node.Id;
-                            dependency.Callee = delegateNode.Id;
-                            dependencies.Add(dependency);
+                            var delegateNodes = tranferedNodes.FindAll(n => n.Type.Equals(NODE_TYPE.DELEGATE)
+                            && n.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                            foreach (var delegateNode in delegateNodes)
+                            {
+                                Dependency dependency = new Dependency();
+                                dependency.Type = DEPENDENCY_TYPE.CALLBACK.ToString();
+                                dependency.Caller = node.Id;
+                                dependency.Callee = delegateNode.Id;
+                                dependencies.Add(dependency);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (node.SyntaxNode.Kind() == SyntaxKind.ConstructorDeclaration)
+            {
+                ConstructorDeclarationSyntax constructorSyntax = (ConstructorDeclarationSyntax)node.SyntaxNode;
+
+                if (constructorSyntax is not null && constructorSyntax.ParameterList is not null && model is not null)
+                {
+                    var parameterSyntaxes = constructorSyntax.ParameterList.Parameters;
+
+                    foreach (var parameterSyntax in parameterSyntaxes)
+                    {
+                        var symbol = model.GetDeclaredSymbol(parameterSyntax);
+                        if (symbol is not null)
+                        {
+                            var delegateNodes = tranferedNodes.FindAll(n => n.Type.Equals(NODE_TYPE.DELEGATE)
+                            && n.BindingName.Equals(symbol.ToString().Replace('.', Path.DirectorySeparatorChar)));
+
+                            foreach (var delegateNode in delegateNodes)
+                            {
+                                Dependency dependency = new Dependency();
+                                dependency.Type = DEPENDENCY_TYPE.CALLBACK.ToString();
+                                dependency.Caller = node.Id;
+                                dependency.Callee = delegateNode.Id;
+                                dependencies.Add(dependency);
+                            }
                         }
                     }
                 }
@@ -849,17 +1031,17 @@ namespace CSharpCIA.CSharpCIA.API
                     // Test10//Animal//Sound
                     // item, node also in tranferedNodes
 
-                    string childPath = null;
+                    string childPath = "";
                     if (node.BindingName.Length < item.BindingName.Length)
                     {
                         childPath = item.BindingName.Remove(0, node.BindingName.Length);
                     }
-                    if (childPath is not null
+                    if (!String.IsNullOrEmpty(childPath)
                         && childPath.Count(c => c.Equals(Path.DirectorySeparatorChar)) == 1
                         && item.BindingName.StartsWith(node.BindingName))
                     {
                         Dependency dependency = new Dependency();
-                        dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
+                        dependency.Type = DEPENDENCY_TYPE.CONTAIN.ToString();
                         dependency.Caller = node.Id;
                         dependency.Callee = item.Id;
                         dependencies.Add(dependency);
@@ -896,7 +1078,7 @@ namespace CSharpCIA.CSharpCIA.API
                         if (!dicNamespaceCallee.ContainsKey(item.Id))
                         {
                             Dependency dependency = new Dependency();
-                            dependency.Type = DEPENDENCY_TYPE.OWN.ToString();
+                            dependency.Type = DEPENDENCY_TYPE.CONTAIN.ToString();
                             dependency.Caller = root.Id;
                             dependency.Callee = item.Id;
                             dependencies.Add(dependency);

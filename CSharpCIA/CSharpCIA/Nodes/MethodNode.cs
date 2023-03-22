@@ -13,20 +13,23 @@ namespace CSharpCIA.CSharpCIA.Nodes
     {
         private List<string>? attributes;
         private List<string>? modifiers;
+        private bool isContructor;
         private List<string>? parameters;
         private string? body;
         private string returnType;
 
-        public MethodNode(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode,
+        public MethodNode(string simpleName, string qualifiedName, string originName, string sourcePath, string syntax,
+            SyntaxTree syntaxTree, SyntaxNode syntaxNode,
             List<string> attributes, List<string> modifiers,
-            List<string> parameters, string? body, string returnType, string id = null)
-            : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode, id)
+            List<string> parameters, string? body, string returnType, bool isContructor = false, string id = "")
+            : base(simpleName, qualifiedName, originName, sourcePath, syntax, syntaxTree, syntaxNode, id)
         {
             Body = body;
             Parameters = parameters;
             Attributes = attributes;
             Modifiers = modifiers;
             ReturnType = returnType;
+            IsContructor = isContructor;
         }
 
         public string? Body { get => body; set => body = value; }
@@ -36,6 +39,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
         public List<string>? Modifiers { get => modifiers; set => modifiers = value; }
         public List<string>? Parameters { get => parameters; set => parameters = value; }
         public string ReturnType { get => returnType; set => returnType = value; }
+        public bool IsContructor { get => isContructor; set => isContructor = value; }
 
         public override bool isIdentical(Node node)
         {

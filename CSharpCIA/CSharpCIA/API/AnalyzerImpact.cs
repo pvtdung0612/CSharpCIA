@@ -115,7 +115,7 @@ namespace CSharpCIA.CSharpCIA.API
                         scoreImpactCaller += IMPACT_WEIGHT.DEPENDENCY_USE;
                         scoreImpactCallee += IMPACT_WEIGHT.DEPENDENCY_USE;
                     }
-                    if (dependency.Type.Equals(DEPENDENCY_TYPE.OWN.ToString()))
+                    if (dependency.Type.Equals(DEPENDENCY_TYPE.CONTAIN.ToString()))
                     {
                         scoreImpactCaller += IMPACT_WEIGHT.DEPENDENCY_OWN;
                         scoreImpactCallee += IMPACT_WEIGHT.DEPENDENCY_OWN;

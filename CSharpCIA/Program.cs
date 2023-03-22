@@ -79,6 +79,13 @@ check = Extension.ExportDependencyToJson(importDependencies, "D:\\dung\\UET-VNU\
 Console.WriteLine($"\nExport dependency from import: {check}");
 #endregion
 
+#region Use CIAExtension ExportJsonToGexf
+check = Extension.ExportJsonToGexf("D:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\ResultDataTest\\Test11\\TestImport\\Nodes.json",
+    "D:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\ResultDataTest\\Test11\\TestImport\\Dependency.json",
+    "D:\\dung\\UET-VNU\\Lab\\Work\\CSharpCIA\\ResultDataTest\\Test11\\TestImport\\test11.gexf");
+Console.WriteLine($"\nExport json to gexf: {check}");
+#endregion
+
 //// Learn about Roslyn
 //SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(filePath));
 //CompilationUnitSyntax compilationUnitSyntax = syntaxTree.GetCompilationUnitRoot();

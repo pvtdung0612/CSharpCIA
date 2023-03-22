@@ -14,9 +14,9 @@ namespace CSharpCIA.CSharpCIA.Nodes
     {
         private List<string>? attributes;
         private List<string>? modifiers;
-        public DelegateNode(string simpleName, string qualifiedName, string originName, string sourcePath, SyntaxTree syntaxTree, SyntaxNode syntaxNode,
-            List<string>? attributes, List<string>? modifiers, string id = null)
-            : base(simpleName, qualifiedName, originName, sourcePath, syntaxTree, syntaxNode, id)
+        public DelegateNode(string simpleName, string qualifiedName, string originName, string sourcePath, string syntax, SyntaxTree syntaxTree, SyntaxNode syntaxNode,
+            List<string>? attributes, List<string>? modifiers, string id = "")
+            : base(simpleName, qualifiedName, originName, sourcePath, syntax, syntaxTree, syntaxNode, id)
         {
             Attributes = attributes;
             Modifiers = modifiers;
