@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -72,14 +73,20 @@ namespace CSharpCIA.CSharpCIA.Helpers
         {
             try
             {
-                string json = JsonConvert.SerializeObject(obj);
-
-                // Lưu chuỗi JSON vào file
-                File.WriteAllText(filepath, json);
+                if (filepath.EndsWith(".json"))
+                {
+                    string json = JsonConvert.SerializeObject(obj);
+                    File.WriteAllText(filepath, json);
+                } 
+                else
+                {
+                    return false;
+                }
             }
             catch (Exception e)
             {
-                throw e;
+                Console.WriteLine(e.Message);
+                return false;
             }
             return true;
         }

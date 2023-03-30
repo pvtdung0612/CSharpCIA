@@ -25,8 +25,12 @@ namespace CSharpCIA.CSharpCIA.API
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public Tuple<List<Node>, List<Dependency>> Parse(string path)
+        public Tuple<List<Node>, List<Dependency>>? Parse(string path)
         {
+            // Validation
+            if (!Directory.Exists(path) && (!File.Exists(path) && path.EndsWith(".cs")))
+                return null;
+
             // Parse Node
             List<Node> tranferedNodes = ParseNode(path);
             RootNode root = null;
@@ -46,7 +50,7 @@ namespace CSharpCIA.CSharpCIA.API
                 var libs = FileHelper.GetAllDllFile(path);
                 foreach (var l in libs)
                 {
-                    Console.WriteLine($"DLL: {l.ToString()}");
+                    //Console.WriteLine($"DLL: {l.ToString()}");
                     compilation = compilation.AddReferences(MetadataReference.CreateFromFile(l));
                 }
 
@@ -67,15 +71,19 @@ namespace CSharpCIA.CSharpCIA.API
         /// </summary>
         /// <param name="path">Path is Directory Path or File Path of Root</param>
         /// <returns>Root</returns>
-        public List<Node> ParseNode(string path)
+        public List<Node>? ParseNode(string path)
         {
+            // Validation
+            if (!Directory.Exists(path) && (!File.Exists(path) && path.EndsWith(".cs")))
+                return null;
+
             List<Node> tranferedNodes = new List<Node>();
             RootNode root = new RootNode("Root", "Root", path, path, "",  null, null);
             tranferedNodes.Add(root);
 
             foreach (var filePath in FileHelper.GetSourceFiles(path))
             {
-                Console.WriteLine("Parse File Name: " + filePath);
+                //Console.WriteLine("Parse File Name: " + filePath);
                 if (File.Exists(filePath))
                 {
                     // Parser File

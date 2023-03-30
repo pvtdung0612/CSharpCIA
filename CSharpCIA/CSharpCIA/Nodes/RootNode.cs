@@ -12,7 +12,6 @@ namespace CSharpCIA.CSharpCIA.Nodes
 {
     public class RootNode : Node
     {
-
         public override string Type => NODE_TYPE.ROOT.ToString();
 
         [JsonIgnore]

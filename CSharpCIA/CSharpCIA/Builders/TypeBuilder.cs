@@ -40,7 +40,7 @@ namespace CSharpCIA.CSharpCIA.Builders
     {
         public const int DEPENDENCY_INVOKE = 1;
         public const int DEPENDENCY_USE = 1;
-        public const int DEPENDENCY_OWN = 100;
+        public const int DEPENDENCY_CONTAIN = 1;
         public const int DEPENDENCY_INHERIT = 1;
         public const int DEPENDENCY_IMPLEMENT = 1;
         public const int DEPENDENCY_OVERRIDE = 1;

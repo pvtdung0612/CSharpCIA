@@ -15,7 +15,7 @@ namespace CSharpCIA.CSharpCIA.API
     internal class AnalyzerImpact
     {
         /// <summary>
-        /// 
+        /// analyze the change of two version
         /// </summary>
         /// <param name="listNodeVer1"></param>
         /// <param name="listNodeVer2"></param>
@@ -81,21 +81,22 @@ namespace CSharpCIA.CSharpCIA.API
         }
 
         /// <summary>
-        /// 
+        /// phân tích sự thay đổi của phiên bản 2
         /// </summary>
+        /// <param name="nodes">List<Node> of version 2</Node></param>
         /// <param name="nodeChanges">Dictionary<Node.BindingName, CHANGE_TYPE></param>
-        /// <param name="dependencies">List<Dependency> of nodeChanges in a version (may be version 1 or version 2)</param>
-        /// <returns>Dictionary<Node.BindingName, Impact score> is result of ChangeImpactAnalysis</returns>
-        public static Dictionary<string, ulong> ChangeImpactAnalysis(List<Node> nodes, Dictionary<string, string> nodeChanges, List<Dependency> dependencies)
+        /// <param name="dependencies">List<Dependency> of changed node of version 2</param>
+        /// <returns></returns>
+        public static Dictionary<string, ulong> ChangeImpactAnalysis(List<Node> nodeVer2, Dictionary<string, string> nodeChanges, List<Dependency> dependencyVer2)
         {
             // Dictionary<Node.BindingName, Impact score>
             Dictionary<string, ulong> result = new Dictionary<string, ulong>();
 
             // Convert list to dictionary to increase performance
-            Dictionary<string, Node> dicNodes = nodes.ToDictionary(keySelector: n => n.Id, elementSelector: n => n);
+            Dictionary<string, Node> dicNodes = nodeVer2.ToDictionary(keySelector: n => n.Id, elementSelector: n => n);
             
             // những thằng node nào vừa có sự thay đổi vừa có sự phụ thuộc từ thằng khác gọi đến thì tính là có ảnh hưởng
-            foreach (var dependency in dependencies)
+            foreach (var dependency in dependencyVer2)
             {
                 // Những đứa node nào gọi đến node hiện tại thì bị ảnh hưởng
                 if (dicNodes.ContainsKey(dependency.Callee) && nodeChanges.ContainsKey(dicNodes[dependency.Callee].BindingName) 
@@ -117,8 +118,8 @@ namespace CSharpCIA.CSharpCIA.API
                     }
                     if (dependency.Type.Equals(DEPENDENCY_TYPE.CONTAIN.ToString()))
                     {
-                        scoreImpactCaller += IMPACT_WEIGHT.DEPENDENCY_OWN;
-                        scoreImpactCallee += IMPACT_WEIGHT.DEPENDENCY_OWN;
+                        scoreImpactCaller += IMPACT_WEIGHT.DEPENDENCY_CONTAIN;
+                        scoreImpactCallee += IMPACT_WEIGHT.DEPENDENCY_CONTAIN;
                     }
                     if (dependency.Type.Equals(DEPENDENCY_TYPE.INHERIT.ToString()))
                     {
@@ -178,7 +179,7 @@ namespace CSharpCIA.CSharpCIA.API
             }
 
             // Set property impact for node in list nodes
-            foreach (var node in nodes)
+            foreach (var node in nodeVer2)
             {
                 if (result.ContainsKey(node.BindingName))
                 {
@@ -189,22 +190,4 @@ namespace CSharpCIA.CSharpCIA.API
              return result;
         }
     }
-
-
-    class RemoveCommentsVisitor : CSharpSyntaxRewriter
-    {
-        public override SyntaxTrivia VisitTrivia(SyntaxTrivia trivia)
-        {
-            // Loại bỏ các comment trên và trong một câu lệnh
-            if (trivia.IsKind(SyntaxKind.SingleLineCommentTrivia) ||
-                trivia.IsKind(SyntaxKind.MultiLineCommentTrivia))
-            {
-                return default(SyntaxTrivia);
-            }
-
-            // Giữ lại các trivia khác
-            return base.VisitTrivia(trivia);
-        }
-    }
-
 }
