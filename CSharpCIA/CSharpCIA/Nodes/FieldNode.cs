@@ -21,6 +21,7 @@ namespace CSharpCIA.CSharpCIA.Nodes
             : base(simpleName, qualifiedName, originName, sourcePath, syntax, syntaxTree, syntaxNode, id)
         {
             Attributes = attributes;
+            Modifiers = modifiers;
             VariableType = variableType;
             VariableValue = variableValue;
         }

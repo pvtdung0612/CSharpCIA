@@ -279,7 +279,9 @@ namespace CSharpCIA.CSharpCIA.API
 
                     // Update new property
                     new GexfAttribute(15, "isConstuctor", GexfDataType.Boolean),
-                    new GexfAttribute(16, "Syntax", GexfDataType.String)
+                    new GexfAttribute(16, "Syntax", GexfDataType.String),
+                    new GexfAttribute(17, "VariableType", GexfDataType.String),
+                    new GexfAttribute(18, "VariableValue", GexfDataType.String)
                     );
 
                 List<Node>? nodes = ImportNodesFromJson(jsonNodeFilePath);
@@ -302,36 +304,75 @@ namespace CSharpCIA.CSharpCIA.API
                             }
                         };
 
+                        // Các giá trị có GexfAttributeValue thì tham số truyền vào không được null
                         switch (item.Type)
                         {
+                            case nameof(NODE_TYPE.FIELD):
+                                FieldNode fieldNode = (FieldNode)item;
+                                gexfNode.AttrValues.AddRange(
+                                    new GexfAttributeValue(7, fieldNode.Attributes),
+                                    new GexfAttributeValue(8, fieldNode.Modifiers),
+                                    new GexfAttributeValue(17, fieldNode.VariableType),
+                                    new GexfAttributeValue(18, fieldNode.VariableValue)
+
+
+                                    //// "<null value>"
+                                    //new GexfAttributeValue(9, "<null value>"),
+                                    //new GexfAttributeValue(10, "<null value>"),
+                                    //new GexfAttributeValue(11, "<null value>"),
+                                    //new GexfAttributeValue(12, "<null value>"),
+                                    //new GexfAttributeValue(13, "<null value>"),
+                                    //new GexfAttributeValue(14, "<null value>"),
+                                    //new GexfAttributeValue(15, false)
+                                    );
+                                break;
+                            case nameof(NODE_TYPE.PROPERTY):
+                                PropertyNode propertyNode = (PropertyNode)item;
+                                gexfNode.AttrValues.AddRange(
+                                    new GexfAttributeValue(7, propertyNode.Attributes),
+                                    new GexfAttributeValue(8, propertyNode.Modifiers)
+
+
+                                    //// "<null value>"
+                                    //new GexfAttributeValue(9, "<null value>"),
+                                    //new GexfAttributeValue(10, "<null value>"),
+                                    //new GexfAttributeValue(11, "<null value>"),
+                                    //new GexfAttributeValue(12, "<null value>"),
+                                    //new GexfAttributeValue(13, "<null value>"),
+                                    //new GexfAttributeValue(14, "<null value>"),
+                                    //new GexfAttributeValue(15, false),
+                                    //new GexfAttributeValue(17, "<null value>"),
+                                    //new GexfAttributeValue(18, "<null value>")
+                                    );
+                                break;
                             case nameof(NODE_TYPE.CLASS):
                                 ClassNode classNode = (ClassNode)item;
                                 gexfNode.AttrValues.AddRange(
                                     new GexfAttributeValue(7, classNode.Attributes),
                                     new GexfAttributeValue(8, classNode.Modifiers),
-                                    new GexfAttributeValue(9, classNode.Bases),
+                                    new GexfAttributeValue(9, classNode.Bases)
 
-                                    // "<null value>"
-                                    new GexfAttributeValue(10, "<null value>"),
-                                    new GexfAttributeValue(11, "<null value>"),
-                                    new GexfAttributeValue(12, "<null value>"),
-                                    new GexfAttributeValue(13, "<null value>"),
-                                    new GexfAttributeValue(14, "<null value>")
+                                    //// "<null value>"
+                                    //new GexfAttributeValue(10, "<null value>"),
+                                    //new GexfAttributeValue(11, "<null value>"),
+                                    //new GexfAttributeValue(12, "<null value>"),
+                                    //new GexfAttributeValue(13, "<null value>"),
+                                    //new GexfAttributeValue(14, "<null value>")
                                     );
                                 break;
                             case nameof(NODE_TYPE.DELEGATE):
                                 DelegateNode delegateNode = (DelegateNode)item;
                                 gexfNode.AttrValues.AddRange(
                                     new GexfAttributeValue(7, delegateNode.Attributes),
-                                    new GexfAttributeValue(8, delegateNode.Modifiers),
+                                    new GexfAttributeValue(8, delegateNode.Modifiers)
 
-                                    // "<null value>"
-                                    new GexfAttributeValue(9, "<null value>"),
-                                    new GexfAttributeValue(10, "<null value>"),
-                                    new GexfAttributeValue(11, "<null value>"),
-                                    new GexfAttributeValue(12, "<null value>"),
-                                    new GexfAttributeValue(13, "<null value>"),
-                                    new GexfAttributeValue(14, "<null value>")
+                                    //// "<null value>"
+                                    //new GexfAttributeValue(9, "<null value>"),
+                                    //new GexfAttributeValue(10, "<null value>"),
+                                    //new GexfAttributeValue(11, "<null value>"),
+                                    //new GexfAttributeValue(12, "<null value>"),
+                                    //new GexfAttributeValue(13, "<null value>"),
+                                    //new GexfAttributeValue(14, "<null value>")
                                     );
                                 break;
                             case nameof(NODE_TYPE.ENUM):
@@ -339,14 +380,14 @@ namespace CSharpCIA.CSharpCIA.API
                                 gexfNode.AttrValues.AddRange(
                                     new GexfAttributeValue(7, enumNode.Attributes),
                                     new GexfAttributeValue(8, enumNode.Modifiers),
-                                    new GexfAttributeValue(9, enumNode.Bases),
+                                    new GexfAttributeValue(9, enumNode.Bases)
 
-                                    // "<null value>"
-                                    new GexfAttributeValue(10, "<null value>"),
-                                    new GexfAttributeValue(11, "<null value>"),
-                                    new GexfAttributeValue(12, "<null value>"),
-                                    new GexfAttributeValue(13, "<null value>"),
-                                    new GexfAttributeValue(14, "<null value>")
+                                    //// "<null value>"
+                                    //new GexfAttributeValue(10, "<null value>"),
+                                    //new GexfAttributeValue(11, "<null value>"),
+                                    //new GexfAttributeValue(12, "<null value>"),
+                                    //new GexfAttributeValue(13, "<null value>"),
+                                    //new GexfAttributeValue(14, "<null value>")
                                     );
                                 break;
                             case nameof(NODE_TYPE.INTERFACE):
@@ -354,14 +395,14 @@ namespace CSharpCIA.CSharpCIA.API
                                 gexfNode.AttrValues.AddRange(
                                     new GexfAttributeValue(7, interfaceNode.Attributes),
                                     new GexfAttributeValue(8, interfaceNode.Modifiers),
-                                    new GexfAttributeValue(9, interfaceNode.Bases),
+                                    new GexfAttributeValue(9, interfaceNode.Bases)
 
-                                    // "<null value>"
-                                    new GexfAttributeValue(10, "<null value>"),
-                                    new GexfAttributeValue(11, "<null value>"),
-                                    new GexfAttributeValue(12, "<null value>"),
-                                    new GexfAttributeValue(13, "<null value>"),
-                                    new GexfAttributeValue(14, "<null value>")
+                                    //// "<null value>"
+                                    //new GexfAttributeValue(10, "<null value>"),
+                                    //new GexfAttributeValue(11, "<null value>"),
+                                    //new GexfAttributeValue(12, "<null value>"),
+                                    //new GexfAttributeValue(13, "<null value>"),
+                                    //new GexfAttributeValue(14, "<null value>")
                                     );
                                 break;
                             case nameof(NODE_TYPE.METHOD):
@@ -372,12 +413,12 @@ namespace CSharpCIA.CSharpCIA.API
                                     new GexfAttributeValue(10, methodNode.Parameters),
                                     new GexfAttributeValue(11, methodNode.Body),
                                     new GexfAttributeValue(12, methodNode.ReturnType),
-                                    new GexfAttributeValue(15, methodNode.IsContructor),
+                                    new GexfAttributeValue(15, methodNode.IsContructor)
 
-                                    // "<null value>"
-                                    new GexfAttributeValue(9, "<null value>"),
-                                    new GexfAttributeValue(13, "<null value>"),
-                                    new GexfAttributeValue(14, "<null value>")
+                                    //// "<null value>"
+                                    //new GexfAttributeValue(9, "<null value>"),
+                                    //new GexfAttributeValue(13, "<null value>"),
+                                    //new GexfAttributeValue(14, "<null value>")
 
                                     );
                                 break;
@@ -387,28 +428,28 @@ namespace CSharpCIA.CSharpCIA.API
                                     new GexfAttributeValue(13, namespaceNode.AllOriginNames),
                                     new GexfAttributeValue(14, namespaceNode.AllSourcePaths),
                                     new GexfAttributeValue(7, namespaceNode.Attributes),
-                                    new GexfAttributeValue(8, namespaceNode.Modifiers),
+                                    new GexfAttributeValue(8, namespaceNode.Modifiers)
 
-                                    // "<null value>"
-                                    new GexfAttributeValue(9, "<null value>"),
-                                    new GexfAttributeValue(10, "<null value>"),
-                                    new GexfAttributeValue(11, "<null value>"),
-                                    new GexfAttributeValue(12, "<null value>")
+                                    //// "<null value>"
+                                    //new GexfAttributeValue(9, "<null value>"),
+                                    //new GexfAttributeValue(10, "<null value>"),
+                                    //new GexfAttributeValue(11, "<null value>"),
+                                    //new GexfAttributeValue(12, "<null value>")
                                     );
                                 break;
                             case nameof(NODE_TYPE.ROOT):
                                 RootNode rootNode = (RootNode)item;
                                 gexfNode.AttrValues.AddRange(
-                                // "<null value>"
-                                new GexfAttributeValue(9, "<null value>"),
-                                    new GexfAttributeValue(7, "<null value>"),
-                                    new GexfAttributeValue(8, "<null value>"),
-                                    new GexfAttributeValue(9, "<null value>"),
-                                    new GexfAttributeValue(10, "<null value>"),
-                                    new GexfAttributeValue(11, "<null value>"),
-                                    new GexfAttributeValue(12, "<null value>"),
-                                    new GexfAttributeValue(13, "<null value>"),
-                                    new GexfAttributeValue(14, "<null value>")
+                                //// "<null value>"
+                                //new GexfAttributeValue(9, "<null value>"),
+                                //    new GexfAttributeValue(7, "<null value>"),
+                                //    new GexfAttributeValue(8, "<null value>"),
+                                //    new GexfAttributeValue(9, "<null value>"),
+                                //    new GexfAttributeValue(10, "<null value>"),
+                                //    new GexfAttributeValue(11, "<null value>"),
+                                //    new GexfAttributeValue(12, "<null value>"),
+                                //    new GexfAttributeValue(13, "<null value>"),
+                                //    new GexfAttributeValue(14, "<null value>")
                                     );
                                 break;
                             case nameof(NODE_TYPE.STRUCT):
@@ -416,16 +457,16 @@ namespace CSharpCIA.CSharpCIA.API
                                 gexfNode.AttrValues.AddRange(
                                     new GexfAttributeValue(7, structNode.Attributes),
                                     new GexfAttributeValue(8, structNode.Modifiers),
-                                    new GexfAttributeValue(9, structNode.Bases),
+                                    new GexfAttributeValue(9, structNode.Bases)
 
-                                    // "<null value>"
-                                    new GexfAttributeValue(10, "<null value>"),
-                                    new GexfAttributeValue(11, "<null value>"),
-                                    new GexfAttributeValue(12, "<null value>"),
-                                    new GexfAttributeValue(13, "<null value>"),
-                                    new GexfAttributeValue(14, "<null value>"),
-                                    new GexfAttributeValue(15, "<null value>"),
-                                    new GexfAttributeValue(16, "<null value>")
+                                    //// "<null value>"
+                                    //new GexfAttributeValue(10, "<null value>"),
+                                    //new GexfAttributeValue(11, "<null value>"),
+                                    //new GexfAttributeValue(12, "<null value>"),
+                                    //new GexfAttributeValue(13, "<null value>"),
+                                    //new GexfAttributeValue(14, "<null value>"),
+                                    //new GexfAttributeValue(15, "<null value>"),
+                                    //new GexfAttributeValue(16, "<null value>")
                                     );
                                 break;
                             default:
