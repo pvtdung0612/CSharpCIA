@@ -6,7 +6,8 @@
 
 <a name="tech"></a>
 ## Công nghệ sử dụng
-* C#: phiên bản 7.0 trở lên
+* C# phiên bản 7.0 trở lên
+* [Roslyn](https://github.com/dotnet/roslyn)
 
 <a name="run"></a>
 ## Hướng dẫn chạy
