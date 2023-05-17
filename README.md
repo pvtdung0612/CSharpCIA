@@ -11,4 +11,4 @@
 
 <a name="run"></a>
 ## Hướng dẫn chạy
-1. Chạy file Program.cs theo đường dẫn CSharpCIA\CSharpCIA\Program.cs
+Chạy file Program.cs theo đường dẫn CSharpCIA\CSharpCIA\Program.cs
