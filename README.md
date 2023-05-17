@@ -6,7 +6,7 @@
 
 <a name="tech"></a>
 ## Công nghệ sử dụng
-* C# phiên bản 7.0 trở lên
+* [C#](https://learn.microsoft.com/vi-vn/dotnet/csharp) phiên bản 7.0 trở lên
 * [Roslyn](https://github.com/dotnet/roslyn)
 
 <a name="run"></a>
