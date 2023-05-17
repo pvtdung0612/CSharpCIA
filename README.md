@@ -6,10 +6,7 @@
 
 <a name="tech"></a>
 ## Công nghệ sử dụng
-* NodeJs : [NodeJs@18.12.1](https://nodejs.org/en/download)
-* Frontend : [ReactJs@18.2.0](https://reactjs.org/)
-* Backend : [ExpressJs@4.18.2](https://expressjs.com/)
-* Database : [SQL](https://www.apachefriends.org/download.html)
+* C#: phiên bản 7.0 trở lên
 
 <a name="run"></a>
 ## Hướng dẫn chạy
