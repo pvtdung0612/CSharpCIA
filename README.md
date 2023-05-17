@@ -1,4 +1,5 @@
-# CSharpCIA là công cụ phân tích mã nguồn C# tìm ra sự thay đổi giữa 2 phiên bản
+# CSharpCIA
+CSharpCIA là công cụ phân tích mã nguồn C# tìm ra sự thay đổi giữa 2 phiên bản
 
 ## Nội dung
 1. [Công nghệ sử dụng](#tech)
